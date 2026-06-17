@@ -828,7 +828,8 @@ label {
   overflow: hidden;
   border-radius: 8px;
   background:
-    linear-gradient(135deg, rgba(41, 76, 199, 0.08), transparent 42%),
+    linear-gradient(135deg, rgba(41, 76, 199, 0.10), transparent 42%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.74), rgba(255, 255, 255, 0.20)),
     #edf2f8;
 }
 
@@ -849,70 +850,141 @@ label {
   inset: 22px;
   border-radius: 18px;
   background:
-    radial-gradient(circle at 24% 50%, rgba(34, 196, 154, 0.16) 0 7%, transparent 8%),
-    radial-gradient(circle at 66% 58%, rgba(41, 76, 199, 0.12) 0 9%, transparent 10%),
+    radial-gradient(circle at 18% 62%, rgba(34, 196, 154, 0.15) 0 7%, transparent 8%),
+    radial-gradient(circle at 52% 53%, rgba(255, 107, 26, 0.12) 0 7%, transparent 8%),
+    radial-gradient(circle at 78% 37%, rgba(41, 76, 199, 0.13) 0 9%, transparent 10%),
     rgba(255, 255, 255, 0.35);
 }
 
-.map-zone {
+.route-info-card {
   position: absolute;
+  top: 22px;
+  left: 24px;
   z-index: 2;
-  padding: 6px 10px;
-  border-radius: 999px;
-  color: #58708f;
-  background: rgba(255, 255, 255, 0.72);
-  font-size: 11px;
-  font-weight: 800;
+  display: grid;
+  gap: 4px;
+  padding: 14px 16px;
+  border: 1px solid rgba(129, 149, 176, 0.22);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.86);
+  box-shadow: 0 18px 35px rgba(29, 42, 60, 0.10);
 }
 
-.map-zone.north { left: 18%; top: 18%; }
-.map-zone.center { left: 40%; top: 48%; }
-.map-zone.south { right: 18%; bottom: 21%; }
-
-.map-point {
-  position: absolute;
-  z-index: 2;
-  width: 13px;
-  height: 13px;
-  border-radius: 50%;
-  background: #22c49a;
-}
-
-.map-point.lima { left: 26%; top: 42%; }
-.map-point.cusco { left: 48%; top: 41%; background: #ff6b1a; width: 6px; height: 6px; }
-.map-point.arequipa { left: 62%; top: 55%; background: #12a97e; width: 6px; height: 6px; }
-.map-point.trujillo { left: 33%; top: 26%; background: #294cc7; width: 8px; height: 8px; }
-
-.map-label {
-  position: absolute;
-  z-index: 2;
-  color: #71819a;
+.route-info-card span {
+  color: var(--blue);
   font-size: 12px;
   font-weight: 800;
 }
 
-.label-lima { left: 22%; top: 50%; }
-.label-cusco { left: 47%; top: 34%; }
-.label-arequipa { right: 18%; bottom: 30%; }
-.label-trujillo { left: 28%; top: 18%; }
-
-.map-route {
-  position: absolute;
-  left: 27%;
-  top: 45%;
-  z-index: 3;
-  width: 210px;
-  height: 2px;
-  transform: rotate(14deg);
-  background: #294cc7;
+.route-info-card strong {
+  font-size: 15px;
 }
 
-.map-route.secondary {
-  left: 31%;
-  top: 33%;
-  width: 150px;
-  transform: rotate(-26deg);
-  background: #18bd82;
+.route-info-card small {
+  color: var(--muted);
+  font-weight: 700;
+}
+
+.route-node {
+  position: absolute;
+  z-index: 4;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #29405f;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.route-node i {
+  width: 18px;
+  height: 18px;
+  border: 4px solid #fff;
+  border-radius: 50%;
+  background: var(--green);
+  box-shadow: 0 0 0 3px rgba(24, 189, 130, 0.24), 0 12px 24px rgba(29, 42, 60, 0.16);
+}
+
+.route-node.origin {
+  left: 14%;
+  bottom: 38%;
+}
+
+.route-node.checkpoint {
+  left: 46%;
+  bottom: 52%;
+}
+
+.route-node.checkpoint i {
+  background: var(--orange);
+  box-shadow: 0 0 0 3px rgba(255, 107, 26, 0.24), 0 12px 24px rgba(29, 42, 60, 0.16);
+}
+
+.route-node.destination {
+  right: 12%;
+  top: 25%;
+}
+
+.route-node.destination i {
+  background: var(--blue);
+  box-shadow: 0 0 0 3px rgba(41, 76, 199, 0.22), 0 12px 24px rgba(29, 42, 60, 0.16);
+}
+
+.route-line,
+.route-progress {
+  position: absolute;
+  z-index: 3;
+  height: 5px;
+  border-radius: 999px;
+  transform-origin: left center;
+}
+
+.route-line {
+  background: rgba(88, 112, 143, 0.22);
+}
+
+.route-progress {
+  background: linear-gradient(90deg, var(--green), var(--orange), var(--blue));
+}
+
+.route-line-one,
+.route-progress-one {
+  left: 18%;
+  bottom: 42%;
+  width: 226px;
+  transform: rotate(-18deg);
+}
+
+.route-line-two,
+.route-progress-two {
+  left: 50%;
+  bottom: 56%;
+  width: 205px;
+  transform: rotate(-23deg);
+}
+
+.route-progress-one {
+  width: 226px;
+}
+
+.route-progress-two {
+  width: 118px;
+}
+
+.truck-marker {
+  position: absolute;
+  left: 66%;
+  top: 31%;
+  z-index: 5;
+  width: 42px;
+  height: 42px;
+  display: grid;
+  place-items: center;
+  border: 4px solid #fff;
+  border-radius: 12px;
+  color: #fff;
+  background: var(--blue);
+  box-shadow: 0 16px 34px rgba(41, 76, 199, 0.28);
 }
 
 .progress-row {

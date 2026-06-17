@@ -354,19 +354,21 @@ function DashboardPage({ client }) {
         <div className="panel map-panel">
           <PanelTitle icon={MapPin} title="Cobertura de Distribucion" />
           <div className="map-canvas">
-            <span className="map-zone north">Norte</span>
-            <span className="map-zone center">Centro</span>
-            <span className="map-zone south">Sur</span>
-            <span className="map-point lima" />
-            <span className="map-point cusco" />
-            <span className="map-point arequipa" />
-            <span className="map-point trujillo" />
-            <span className="map-label label-lima">Lima</span>
-            <span className="map-label label-cusco">Cusco</span>
-            <span className="map-label label-arequipa">Arequipa</span>
-            <span className="map-label label-trujillo">Trujillo</span>
-            <div className="map-route" />
-            <div className="map-route secondary" />
+            <div className="route-info-card">
+              <span>Ruta activa</span>
+              <strong>Lima - Ica - Arequipa</strong>
+              <small>ETA 18:00 · 78% completado</small>
+            </div>
+            <span className="route-node origin"><i />Lima</span>
+            <span className="route-node checkpoint"><i />Ica</span>
+            <span className="route-node destination"><i />Arequipa</span>
+            <div className="route-line route-line-one" />
+            <div className="route-line route-line-two" />
+            <div className="route-progress route-progress-one" />
+            <div className="route-progress route-progress-two" />
+            <div className="truck-marker">
+              <Truck size={18} />
+            </div>
           </div>
         </div>
 
