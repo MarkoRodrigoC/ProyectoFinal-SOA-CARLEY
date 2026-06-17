@@ -567,7 +567,9 @@ function InventoryTablePage({ client, title, subtitle, mode }) {
 function OrdersPage({ client }) {
   const [orders, setOrders] = useState([]);
   const [status, setStatus] = useState('');
-  const [quantity, setQuantity] = useState(4);
+  const [sku, setSku] = useState('');
+  const [quantity, setQuantity] = useState('');
+  const [pendingItems, setPendingItems] = useState([]);
 
   async function refreshOrders() {
     const result = await client.getOrders();
@@ -576,6 +578,11 @@ function OrdersPage({ client }) {
 
   async function registerOrder() {
     setStatus('');
+    if (pendingItems.length === 0) {
+      setStatus('Agrega al menos un producto antes de registrar el pedido.');
+      return;
+    }
+
     try {
       const result = await client.registerOrder({
         customer: {
@@ -587,12 +594,69 @@ function OrdersPage({ client }) {
           externalReference: `OC-${Date.now()}`,
           currency: 'PEN'
         },
-        items: [{ sku: 'SKU123ABC', quantity: Number(quantity) }]
+        items: pendingItems.map((item) => ({ sku: item.sku, quantity: item.quantity }))
       });
       setStatus(`Pedido registrado: ${result.orderId}`);
+      setPendingItems([]);
+      setSku('');
+      setQuantity('');
       await refreshOrders();
     } catch (requestError) {
       setStatus(requestError.response?.data?.message || 'No se pudo registrar el pedido.');
+    }
+  }
+
+  async function addProduct() {
+    setStatus('');
+    const normalizedSku = sku.trim().toUpperCase();
+    const parsedQuantity = Number(quantity);
+
+    if (!normalizedSku) {
+      setStatus('Ingresa el SKU del producto.');
+      return;
+    }
+
+    if (!Number.isInteger(parsedQuantity) || parsedQuantity <= 0) {
+      setStatus('Ingresa una cantidad valida mayor a cero.');
+      return;
+    }
+
+    try {
+      const product = await client.getInventory(normalizedSku);
+      if (product.stock.available < parsedQuantity) {
+        setStatus(`Stock insuficiente para ${normalizedSku}. Disponible: ${product.stock.available}.`);
+        return;
+      }
+
+      setPendingItems((current) => {
+        const existing = current.find((item) => item.sku === product.sku);
+        if (existing) {
+          if (existing.quantity + parsedQuantity > product.stock.available) {
+            setStatus(`Stock insuficiente para ${product.sku}. Disponible: ${product.stock.available}.`);
+            return current;
+          }
+
+          return current.map((item) => (
+            item.sku === product.sku
+              ? { ...item, quantity: item.quantity + parsedQuantity }
+              : item
+          ));
+        }
+
+        return [
+          ...current,
+          {
+            sku: product.sku,
+            productName: product.productName,
+            quantity: parsedQuantity,
+            available: product.stock.available
+          }
+        ];
+      });
+      setSku('');
+      setQuantity('');
+    } catch (requestError) {
+      setStatus(requestError.response?.data?.message || 'No se encontro el SKU indicado.');
     }
   }
 
@@ -609,18 +673,60 @@ function OrdersPage({ client }) {
           <PanelTitle icon={ClipboardList} title="Nuevo Pedido" />
           <label>
             SKU
-            <div className="input-shell"><Package size={18} /><input value="SKU123ABC" readOnly /></div>
+            <div className="input-shell">
+              <Package size={18} />
+              <input value={sku} onChange={(event) => setSku(event.target.value)} placeholder="Ej. ARROZ001" />
+            </div>
           </label>
           <label>
             Cantidad
-            <div className="input-shell"><ShoppingCart size={18} /><input type="number" min="1" value={quantity} onChange={(event) => setQuantity(event.target.value)} /></div>
+            <div className="input-shell">
+              <ShoppingCart size={18} />
+              <input inputMode="numeric" value={quantity} onChange={(event) => setQuantity(event.target.value)} placeholder="Ej. 5" />
+            </div>
           </label>
+          <button className="secondary-button" onClick={addProduct} type="button">Agregar producto</button>
+
+          <div className="order-items-card">
+            <div className="order-items-header">
+              <strong>Productos del pedido</strong>
+              <span>{pendingItems.length} item(s)</span>
+            </div>
+            <div className="order-items-table">
+              <table>
+                <thead>
+                  <tr>
+                    <th>SKU</th>
+                    <th>Producto</th>
+                    <th>Cantidad</th>
+                    <th>Stock</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {pendingItems.map((item) => (
+                    <tr key={item.sku}>
+                      <td>{item.sku}</td>
+                      <td>{item.productName}</td>
+                      <td>{item.quantity}</td>
+                      <td>{item.available}</td>
+                    </tr>
+                  ))}
+                  {pendingItems.length === 0 ? (
+                    <tr>
+                      <td colSpan="4"><div className="empty-state compact">Agrega productos desde el SKU del catalogo</div></td>
+                    </tr>
+                  ) : null}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
           <button className="primary-button" onClick={registerOrder} type="button">Registrar pedido</button>
           {status ? <div className="inline-status">{status}</div> : null}
         </div>
 
         <div className="panel">
-          <PanelTitle icon={Package} title="Pedidos Persistidos" />
+          <PanelTitle icon={Package} title="Pedidos Creados" />
           <div className="order-list">
             {orders.slice(0, 6).map((order) => (
               <div className="order-row" key={order.orderId}>

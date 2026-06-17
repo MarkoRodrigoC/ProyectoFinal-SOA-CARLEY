@@ -475,6 +475,7 @@ label {
 }
 
 .primary-button,
+.secondary-button,
 .sso-button,
 .support-card a,
 .support-card button {
@@ -503,6 +504,17 @@ label {
   width: auto;
   min-width: 150px;
   padding: 0 18px;
+}
+
+.secondary-button {
+  width: 100%;
+  border: 1px solid #cbd8f3;
+  color: var(--blue);
+  background: #eef3ff;
+}
+
+.secondary-button:hover {
+  background: #e3ebff;
 }
 
 .sso-button {
@@ -1164,6 +1176,42 @@ td {
 
 .order-row span {
   color: var(--muted);
+}
+
+.order-items-card {
+  display: grid;
+  gap: 12px;
+  margin: 16px 0;
+  padding: 14px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: #f8fbff;
+}
+
+.order-items-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.order-items-header span {
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.order-items-table {
+  overflow: auto;
+}
+
+.order-items-table table {
+  min-width: 640px;
+  background: #fff;
+}
+
+.empty-state.compact {
+  min-height: 86px;
 }
 
 .empty-state,
