@@ -7,5 +7,6 @@ const router = Router();
 router.use('/api/auth', reverseProxy(env.downstream.security));
 router.use('/api/inventario', reverseProxy(env.downstream.inventory));
 router.use('/api/pedidos', reverseProxy(env.downstream.orders));
+router.use('/api/transporte', reverseProxy(env.downstream.transport));
 
 module.exports = router;

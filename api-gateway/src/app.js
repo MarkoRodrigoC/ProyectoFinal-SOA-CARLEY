@@ -32,7 +32,8 @@ app.get('/', (req, res) => {
     protectedEndpoints: {
       inventory: 'GET /api/inventario/buscar/:sku',
       registerOrder: 'POST /api/pedidos/registrar',
-      listOrders: 'GET /api/pedidos'
+      listOrders: 'GET /api/pedidos',
+      confirmDelivery: 'POST /api/transporte/confirmar-entrega'
     }
   });
 });

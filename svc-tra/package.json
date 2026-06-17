@@ -1,18 +1,16 @@
 {
-  "name": "carley-svc-inv",
+  "name": "carley-svc-tra",
   "version": "1.0.0",
-  "description": "Microservicio de inventario de CARLEY.",
+  "description": "Microservicio de transporte y despacho de CARLEY.",
   "main": "src/server.js",
   "scripts": {
     "start": "node src/server.js"
   },
   "dependencies": {
+    "amqplib": "^0.10.5",
     "cors": "^2.8.5",
     "dotenv": "^16.4.7",
-    "express": "^4.21.2",
-    "amqplib": "^0.10.5",
-    "pg": "^8.13.1",
-    "sequelize": "^6.37.5"
+    "express": "^4.21.2"
   },
   "engines": {
     "node": ">=20.0.0"

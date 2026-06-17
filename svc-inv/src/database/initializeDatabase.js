@@ -1,5 +1,6 @@
 const sequelize = require('./sequelize');
 const InventoryStock = require('../models/inventoryStock.model');
+require('../models/processedInventoryEvent.model');
 
 const initialStock = [
   {

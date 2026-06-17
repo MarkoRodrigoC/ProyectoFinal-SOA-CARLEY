@@ -1,4 +1,4 @@
-nu# CARLEY - Scaffold SOA con Microservicios
+# CARLEY - Scaffold SOA con Microservicios
 
 Arquitectura base desacoplada para la transformacion del ecosistema digital de CARLEY, usando Node.js, Express y una organizacion modular por controlador, servicio y repositorio.
 
@@ -66,7 +66,33 @@ Arquitectura base desacoplada para la transformacion del ecosistema digital de C
 |       `-- utils/
 |           |-- asyncHandler.js
 |           `-- httpError.js
-`-- svc-ped/
+|-- svc-ped/
+|   |-- package.json
+|   |-- .env.example
+|   `-- src/
+|       |-- app.js
+|       |-- server.js
+|       |-- clients/
+|       |   `-- inventory.client.js
+|       |-- config/
+|       |   `-- env.js
+|       |-- controllers/
+|       |   `-- orders.controller.js
+|       |-- database/
+|       |   `-- sequelize.js
+|       |-- models/
+|       |   |-- order.model.js
+|       |   `-- orderItem.model.js
+|       |-- repositories/
+|       |   `-- orders.repository.js
+|       |-- routes/
+|       |   `-- orders.routes.js
+|       |-- services/
+|       |   `-- orders.service.js
+|       `-- utils/
+|           |-- asyncHandler.js
+|           `-- httpError.js
+`-- svc-tra/
     |-- package.json
     |-- .env.example
     `-- src/
@@ -75,15 +101,15 @@ Arquitectura base desacoplada para la transformacion del ecosistema digital de C
         |-- config/
         |   `-- env.js
         |-- controllers/
-        |   `-- orders.controller.js
+        |   `-- delivery.controller.js
+        |-- messaging/
+        |   `-- rabbitmq.publisher.js
         |-- middlewares/
         |   `-- errorHandler.js
-        |-- repositories/
-        |   `-- orders.repository.js
         |-- routes/
-        |   `-- orders.routes.js
+        |   `-- delivery.routes.js
         |-- services/
-        |   `-- orders.service.js
+        |   `-- delivery.service.js
         `-- utils/
             |-- asyncHandler.js
             `-- httpError.js
@@ -106,6 +132,7 @@ docker compose up -d
 cd svc-sec && npm start
 cd svc-inv && npm start
 cd svc-ped && npm start
+cd svc-tra && npm start
 cd api-gateway && npm start
 ```
 
@@ -135,6 +162,20 @@ order_items
 Los pedidos registrados quedan persistidos en PostgreSQL y ya no se pierden al reiniciar `svc-ped`.
 
 Antes de registrar un pedido, `SVC-PED` consulta sincronicamente a `SVC-INV` por HTTP para validar stock disponible por SKU. Si no hay stock suficiente, responde `409 Conflict` y no persiste el pedido.
+
+## Mensajeria RabbitMQ
+
+`SVC-TRA` publica el evento `PedidoEntregado` en RabbitMQ cuando se confirma una entrega fisica.
+
+Cola durable:
+
+```text
+carley.pedidos.entregados
+```
+
+`SVC-INV` consume esa cola al iniciar. Cuando recibe un evento `PedidoEntregado`, descuenta stock fisico y disponible en PostgreSQL. Tambien registra el `eventId` en `processed_inventory_events` para evitar reprocesar dos veces el mismo evento.
+
+Si `SVC-INV` esta apagado, RabbitMQ conserva el mensaje. Al volver a levantar `SVC-INV`, el consumidor procesa los mensajes pendientes.
 
 ## Contratos base
 
@@ -197,3 +238,23 @@ Payload ejemplo:
 `GET http://localhost:8000/api/pedidos`
 
 Lista los pedidos persistidos en PostgreSQL.
+
+### Transporte
+
+`POST http://localhost:8000/api/transporte/confirmar-entrega`
+
+Roles permitidos: `ADMINISTRADOR`.
+
+Payload ejemplo:
+
+```json
+{
+  "orderId": "dd433a36-0ce4-43c7-813e-bb37e5241db8",
+  "items": [
+    {
+      "sku": "SKU123ABC",
+      "quantity": 4
+    }
+  ]
+}
+```

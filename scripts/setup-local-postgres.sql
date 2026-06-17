@@ -1,4 +1,4 @@
-CREATE USER carley_user WITH PASSWORD 'CarleyPassword123!';
+CREATE USER carley_user WITH PASSWORD 'CarleyPassword123';
 
 CREATE DATABASE carley_inventario OWNER carley_user;
 CREATE DATABASE carley_pedidos OWNER carley_user;

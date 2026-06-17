@@ -6,5 +6,9 @@ module.exports = [
   {
     prefix: '/api/pedidos',
     roles: ['ADMINISTRADOR']
+  },
+  {
+    prefix: '/api/transporte',
+    roles: ['ADMINISTRADOR']
   }
 ];

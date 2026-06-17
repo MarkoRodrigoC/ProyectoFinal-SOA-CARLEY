@@ -12,6 +12,7 @@ module.exports = {
   downstream: {
     security: process.env.SVC_SEC_URL || 'http://localhost:3000',
     inventory: process.env.SVC_INV_URL || 'http://localhost:3001',
-    orders: process.env.SVC_PED_URL || 'http://localhost:3002'
+    orders: process.env.SVC_PED_URL || 'http://localhost:3002',
+    transport: process.env.SVC_TRA_URL || 'http://localhost:3003'
   }
 };
