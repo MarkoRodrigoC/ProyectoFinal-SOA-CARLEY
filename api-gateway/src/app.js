@@ -11,7 +11,13 @@ const reverseProxy = require('./utils/reverseProxy');
 const app = express();
 
 app.use(cors({
-  origin: env.corsOrigin,
+  origin: (origin, callback) => {
+    if (!origin || env.corsOrigins.includes(origin)) {
+      return callback(null, true);
+    }
+
+    return callback(new HttpError(403, 'Forbidden', 'CORS origin denied'));
+  },
   methods: ['GET', 'POST', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'X-CARLEY-SIGNATURE'],
   credentials: false

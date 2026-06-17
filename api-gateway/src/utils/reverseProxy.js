@@ -43,6 +43,10 @@ module.exports = (targetBaseUrl) => async (req, res, next) => {
         res.status(proxyRes.statusCode || 502);
 
         Object.entries(proxyRes.headers).forEach(([key, value]) => {
+          if (key.toLowerCase().startsWith('access-control-')) {
+            return;
+          }
+
           if (value !== undefined) {
             res.setHeader(key, value);
           }

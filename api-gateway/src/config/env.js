@@ -2,7 +2,10 @@ require('dotenv').config();
 
 module.exports = {
   port: Number(process.env.PORT || 8000),
-  corsOrigin: process.env.CORS_ORIGIN || 'http://localhost:5173',
+  corsOrigins: (process.env.CORS_ORIGIN || 'http://localhost:5173,http://127.0.0.1:5173,http://localhost:4173,http://127.0.0.1:4173')
+    .split(',')
+    .map((origin) => origin.trim())
+    .filter(Boolean),
   jwt: {
     secret: process.env.JWT_SECRET || 'dev-secret-change-me',
     issuer: process.env.JWT_ISSUER || 'carley-svc-sec',
