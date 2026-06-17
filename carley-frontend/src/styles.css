@@ -690,6 +690,66 @@ label {
   gap: 24px;
 }
 
+.dashboard-hero {
+  min-height: 168px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  padding: 28px 32px;
+  overflow: hidden;
+  border: 1px solid #dce5f1;
+  border-radius: 12px;
+  color: #fff;
+  background:
+    linear-gradient(90deg, rgba(255, 255, 255, 0.08) 1px, transparent 1px),
+    linear-gradient(rgba(255, 255, 255, 0.08) 1px, transparent 1px),
+    linear-gradient(135deg, #1d2a3c 0%, #24436c 58%, #2c6b7a 100%);
+  background-size: 36px 36px, 36px 36px, auto;
+}
+
+.dashboard-hero span {
+  color: #9ee5c9;
+  font-size: 13px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.dashboard-hero h1 {
+  margin: 8px 0 0;
+  font-size: 34px;
+  line-height: 1.1;
+}
+
+.dashboard-hero p {
+  max-width: 650px;
+  margin: 12px 0 0;
+  color: #d7e2f0;
+  font-size: 16px;
+}
+
+.hero-status {
+  min-width: 210px;
+  display: grid;
+  gap: 9px;
+  padding: 18px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 12px;
+  background: rgba(18, 32, 51, 0.40);
+}
+
+.hero-status strong {
+  font-size: 15px;
+}
+
+.hero-status span {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #dce7f5;
+  text-transform: none;
+}
+
 .metric-grid {
   display: grid;
   grid-template-columns: repeat(4, minmax(150px, 1fr));
@@ -767,7 +827,9 @@ label {
   height: 320px;
   overflow: hidden;
   border-radius: 8px;
-  background: #edf2f8;
+  background:
+    linear-gradient(135deg, rgba(41, 76, 199, 0.08), transparent 42%),
+    #edf2f8;
 }
 
 .map-canvas::after {
@@ -781,6 +843,32 @@ label {
   background: #dde6f1;
 }
 
+.map-canvas::before {
+  content: "";
+  position: absolute;
+  inset: 22px;
+  border-radius: 18px;
+  background:
+    radial-gradient(circle at 24% 50%, rgba(34, 196, 154, 0.16) 0 7%, transparent 8%),
+    radial-gradient(circle at 66% 58%, rgba(41, 76, 199, 0.12) 0 9%, transparent 10%),
+    rgba(255, 255, 255, 0.35);
+}
+
+.map-zone {
+  position: absolute;
+  z-index: 2;
+  padding: 6px 10px;
+  border-radius: 999px;
+  color: #58708f;
+  background: rgba(255, 255, 255, 0.72);
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.map-zone.north { left: 18%; top: 18%; }
+.map-zone.center { left: 40%; top: 48%; }
+.map-zone.south { right: 18%; bottom: 21%; }
+
 .map-point {
   position: absolute;
   z-index: 2;
@@ -793,6 +881,7 @@ label {
 .map-point.lima { left: 26%; top: 42%; }
 .map-point.cusco { left: 48%; top: 41%; background: #ff6b1a; width: 6px; height: 6px; }
 .map-point.arequipa { left: 62%; top: 55%; background: #12a97e; width: 6px; height: 6px; }
+.map-point.trujillo { left: 33%; top: 26%; background: #294cc7; width: 8px; height: 8px; }
 
 .map-label {
   position: absolute;
@@ -802,18 +891,28 @@ label {
   font-weight: 800;
 }
 
+.label-lima { left: 22%; top: 50%; }
 .label-cusco { left: 47%; top: 34%; }
 .label-arequipa { right: 18%; bottom: 30%; }
+.label-trujillo { left: 28%; top: 18%; }
 
 .map-route {
   position: absolute;
-  right: 10%;
-  bottom: 54px;
+  left: 27%;
+  top: 45%;
   z-index: 3;
-  width: 150px;
+  width: 210px;
   height: 2px;
-  transform: rotate(-12deg);
+  transform: rotate(14deg);
   background: #294cc7;
+}
+
+.map-route.secondary {
+  left: 31%;
+  top: 33%;
+  width: 150px;
+  transform: rotate(-26deg);
+  background: #18bd82;
 }
 
 .progress-row {
@@ -1074,6 +1173,15 @@ td {
 
   .login-brand-panel {
     min-height: 520px;
+  }
+
+  .dashboard-hero {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .hero-status {
+    width: 100%;
   }
 
   .sidebar {

@@ -310,52 +310,77 @@ function AppShell({ token, identity, onLogout }) {
 
 function DashboardPage({ client }) {
   const [orders, setOrders] = useState([]);
-  const [stock, setStock] = useState(null);
+  const [products, setProducts] = useState([]);
 
   useEffect(() => {
-    Promise.allSettled([client.getOrders(), client.getInventory('SKU123ABC')]).then(([ordersResult, stockResult]) => {
+    Promise.allSettled([client.getOrders(), client.getInventoryList()]).then(([ordersResult, inventoryResult]) => {
       if (ordersResult.status === 'fulfilled') {
         setOrders(ordersResult.value.orders || []);
       }
-      if (stockResult.status === 'fulfilled') {
-        setStock(stockResult.value);
+      if (inventoryResult.status === 'fulfilled') {
+        setProducts(inventoryResult.value.products || []);
       }
     });
   }, [client]);
 
+  const totalAvailable = products.reduce((sum, product) => sum + product.stock.available, 0);
+  const lowStock = products.filter((product) => product.stock.available > 0 && product.stock.available < 20).length;
+  const criticalStock = products.filter((product) => product.stock.available === 0).length;
+  const activeInventoryPercent = products.length
+    ? Math.round((products.filter((item) => item.stock.available > 0).length / products.length) * 100)
+    : 0;
+
   return (
     <div className="page-stack">
-      <PageHeading title="Dashboard Principal" subtitle="Vista general de operaciones en tiempo real" />
+      <section className="dashboard-hero">
+        <div>
+          <span>Centro de control logistico</span>
+          <h1>Dashboard Principal</h1>
+          <p>Monitoreo ejecutivo de pedidos, inventario y entregas para la operacion CARLEY.</p>
+        </div>
+        <div className="hero-status">
+          <strong>Sistema operativo</strong>
+          <span><i className="dot green" /> Servicios activos</span>
+        </div>
+      </section>
 
       <section className="metric-grid">
-        <MetricCard label="Tasa de Entregas a Tiempo" value="94.8%" delta="+2.3%" tone="green" icon={BarChart3} />
-        <MetricCard label="Utilizacion de Flota" value="28/35" helper="Vehiculos activos" tone="blue" icon={Truck} />
-        <MetricCard label="Pedidos Registrados" value={orders.length || 0} helper="Persistidos en PostgreSQL" tone="orange" icon={Package} />
-        <MetricCard label="Stock Disponible" value={stock?.stock?.available ?? '--'} helper="SKU123ABC" tone="red" icon={AlertTriangle} />
+        <MetricCard label="Pedidos Registrados" value={orders.length} helper="Persistidos en PostgreSQL" tone="blue" icon={ClipboardList} />
+        <MetricCard label="Productos Catalogados" value={products.length || '--'} helper="Sede Santa Clara" tone="green" icon={Package} />
+        <MetricCard label="Unidades Disponibles" value={totalAvailable || '--'} helper="Stock operativo total" tone="orange" icon={Warehouse} />
+        <MetricCard label="Alertas de Stock" value={lowStock + criticalStock} helper={`${criticalStock} agotados`} tone="red" icon={AlertTriangle} />
       </section>
 
       <section className="dashboard-grid">
         <div className="panel map-panel">
-          <PanelTitle icon={MapPin} title="Monitoreo GPS en Tiempo Real" />
+          <PanelTitle icon={MapPin} title="Cobertura de Distribucion" />
           <div className="map-canvas">
+            <span className="map-zone north">Norte</span>
+            <span className="map-zone center">Centro</span>
+            <span className="map-zone south">Sur</span>
             <span className="map-point lima" />
             <span className="map-point cusco" />
             <span className="map-point arequipa" />
+            <span className="map-point trujillo" />
+            <span className="map-label label-lima">Lima</span>
             <span className="map-label label-cusco">Cusco</span>
             <span className="map-label label-arequipa">Arequipa</span>
+            <span className="map-label label-trujillo">Trujillo</span>
             <div className="map-route" />
+            <div className="map-route secondary" />
           </div>
         </div>
 
         <div className="panel">
           <PanelTitle title="Resumen de Operaciones" />
-          <ProgressRow label="Entregas del Dia" value="24/28" percent={86} color="green" />
-          <ProgressRow label="Rutas Completadas" value="18/22" percent={82} color="blue" />
-          <ProgressRow label="Capacidad de Almacen" value="67%" percent={67} color="orange" />
+          <ProgressRow label="Disponibilidad de Inventario" value={`${activeInventoryPercent}%`} percent={activeInventoryPercent} color="green" />
+          <ProgressRow label="Pedidos Procesados" value={`${orders.length}`} percent={Math.min(100, orders.length * 12)} color="blue" />
+          <ProgressRow label="Stock en Riesgo" value={`${lowStock + criticalStock}`} percent={Math.min(100, (lowStock + criticalStock) * 8)} color="orange" />
           <div className="next-deliveries">
-            <strong>Proximas Entregas</strong>
-            <span><i className="dot green" /> Cusco · 14:30</span>
-            <span><i className="dot blue" /> Arequipa · 18:00</span>
+            <strong>Actividad Reciente</strong>
+            <span><i className="dot green" /> Inventario sincronizado con PostgreSQL</span>
+            <span><i className="dot blue" /> Gateway protegiendo rutas por JWT</span>
+            <span><i className="dot orange" /> RabbitMQ listo para eventos de entrega</span>
           </div>
         </div>
       </section>
