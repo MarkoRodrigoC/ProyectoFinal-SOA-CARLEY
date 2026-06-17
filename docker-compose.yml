@@ -1,0 +1,56 @@
+version: '3.8'
+
+services:
+  # Base de datos independiente para el Microservicio de Inventario (SVC-INV)
+  carley-inventario-db:
+    image: public.ecr.aws/docker/library/postgres:15
+    container_name: carley_inventario_db
+    restart: always
+    environment:
+      POSTGRES_USER: carley_user
+      POSTGRES_PASSWORD: CarleyPassword123!
+      POSTGRES_DB: carley_inventario
+    ports:
+      - "5432:5432"
+    volumes:
+      - inventario_db_data:/var/lib/postgresql/data
+    networks:
+      - carley-network
+
+  # Base de datos independiente para el Microservicio de Pedidos (SVC-PED)
+  carley-pedidos-db:
+    image: public.ecr.aws/docker/library/postgres:15
+    container_name: carley_pedidos_db
+    restart: always
+    environment:
+      POSTGRES_USER: carley_user
+      POSTGRES_PASSWORD: CarleyPassword123!
+      POSTGRES_DB: carley_pedidos
+    ports:
+      - "5433:5432" # Redirecciona el puerto externo a 5433 para evitar conflictos
+    volumes:
+      - pedidos_db_data:/var/lib/postgresql/data
+    networks:
+      - carley-network
+
+  # Broker de Mensajería - RabbitMQ (Para asegurar la tolerancia a fallos en entregas)
+  carley-rabbitmq:
+    image: public.ecr.aws/docker/library/rabbitmq:3-management
+    container_name: carley_rabbitmq
+    restart: always
+    ports:
+      - "5672:5672"   # Puerto de datos de la cola
+      - "15672:15672" # Puerto del panel web administrativo
+    environment:
+      RABBITMQ_DEFAULT_USER: carley_admin
+      RABBITMQ_DEFAULT_PASS: CarleyRabbit2026!
+    networks:
+      - carley-network
+
+volumes:
+  inventario_db_data:
+  pedidos_db_data:
+
+networks:
+  carley-network:
+    driver: bridge

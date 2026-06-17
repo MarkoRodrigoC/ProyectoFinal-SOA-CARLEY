@@ -1,0 +1,51 @@
+const express = require('express');
+const cors = require('cors');
+const env = require('./config/env');
+const authMiddleware = require('./middlewares/authMiddleware');
+const rbacMiddleware = require('./middlewares/rbacMiddleware');
+const proxyRoutes = require('./routes/proxy.routes');
+const errorHandler = require('./middlewares/errorHandler');
+const HttpError = require('./utils/httpError');
+const reverseProxy = require('./utils/reverseProxy');
+
+const app = express();
+
+app.use(cors({
+  origin: env.corsOrigin,
+  methods: ['GET', 'POST', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-CARLEY-SIGNATURE'],
+  credentials: false
+}));
+
+app.get('/health', (req, res) => {
+  res.status(200).json({ status: 'UP', service: 'API-GATEWAY' });
+});
+
+app.get('/', (req, res) => {
+  res.status(200).json({
+    service: 'CARLEY API Gateway',
+    status: 'UP',
+    publicEndpoints: {
+      health: 'GET /health',
+      login: 'POST /api/auth/login'
+    },
+    protectedEndpoints: {
+      inventory: 'GET /api/inventario/buscar/:sku',
+      registerOrder: 'POST /api/pedidos/registrar',
+      listOrders: 'GET /api/pedidos'
+    }
+  });
+});
+
+app.post('/api/auth/login', reverseProxy(env.downstream.security));
+app.use(authMiddleware);
+app.use(rbacMiddleware);
+app.use(proxyRoutes);
+
+app.use((req, res, next) => {
+  next(new HttpError(404, 'Not Found', 'Route not found'));
+});
+
+app.use(errorHandler);
+
+module.exports = app;
