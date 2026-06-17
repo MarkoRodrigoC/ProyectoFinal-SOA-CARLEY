@@ -323,7 +323,6 @@ function DashboardPage({ client }) {
     });
   }, [client]);
 
-  const totalAvailable = products.reduce((sum, product) => sum + product.stock.available, 0);
   const lowStock = products.filter((product) => product.stock.available > 0 && product.stock.available < 20).length;
   const criticalStock = products.filter((product) => product.stock.available === 0).length;
   const activeInventoryPercent = products.length
@@ -347,7 +346,7 @@ function DashboardPage({ client }) {
       <section className="metric-grid">
         <MetricCard label="Pedidos Registrados" value={orders.length} helper="Persistidos en PostgreSQL" tone="blue" icon={ClipboardList} />
         <MetricCard label="Productos Catalogados" value={products.length || '--'} helper="Sede Santa Clara" tone="green" icon={Package} />
-        <MetricCard label="Unidades Disponibles" value={totalAvailable || '--'} helper="Stock operativo total" tone="orange" icon={Warehouse} />
+        <MetricCard label="Camiones Disponibles" value="50" helper="Flota operativa nacional" tone="orange" icon={Truck} />
         <MetricCard label="Alertas de Stock" value={lowStock + criticalStock} helper={`${criticalStock} agotados`} tone="red" icon={AlertTriangle} />
       </section>
 
