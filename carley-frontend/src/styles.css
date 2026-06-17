@@ -420,6 +420,27 @@ label {
   min-width: min(100%, 340px);
 }
 
+.select-shell {
+  min-width: 230px;
+  display: grid;
+  gap: 7px;
+  margin: 0;
+  color: #58708f;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.select-shell select {
+  min-height: 48px;
+  padding: 0 14px;
+  border: 1px solid var(--line);
+  border-radius: 11px;
+  outline: 0;
+  color: var(--text);
+  background: #fff;
+  font-weight: 700;
+}
+
 .login-row,
 .top-actions,
 .toolbar-panel,
@@ -610,31 +631,12 @@ label {
   height: 68px;
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: flex-end;
   gap: 18px;
   padding: 0 24px;
   border-bottom: 1px solid var(--line);
   background: rgba(255, 255, 255, 0.96);
   backdrop-filter: blur(10px);
-}
-
-.search-box {
-  width: min(100%, 720px);
-  min-height: 42px;
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 0 15px;
-  border: 1px solid var(--line);
-  border-radius: 8px;
-  color: #8794a8;
-  background: #fff;
-}
-
-.search-box input {
-  width: 100%;
-  border: 0;
-  outline: 0;
 }
 
 .icon-button,

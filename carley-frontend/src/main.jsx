@@ -18,7 +18,6 @@ import {
   LogOut,
   Mail,
   MapPin,
-  MoreHorizontal,
   Package,
   Search,
   Settings,
@@ -239,7 +238,6 @@ const navigation = [
 
 function AppShell({ token, identity, onLogout }) {
   const [active, setActive] = useState('dashboard');
-  const [globalSearch, setGlobalSearch] = useState('');
   const client = useApi(token);
 
   return (
@@ -274,10 +272,6 @@ function AppShell({ token, identity, onLogout }) {
 
       <section className="content-shell">
         <header className="topbar">
-          <div className="search-box">
-            <Search size={19} />
-            <input value={globalSearch} onChange={(event) => setGlobalSearch(event.target.value)} placeholder="Buscar pedidos, productos, clientes..." />
-          </div>
           <div className="top-actions">
             <button className="icon-button notification" aria-label="Notificaciones">
               <Bell size={20} />
@@ -414,6 +408,7 @@ function InventoryPage({ client }) {
 function InventoryTablePage({ client, title, subtitle, mode }) {
   const [rows, setRows] = useState([]);
   const [sku, setSku] = useState('SKU123ABC');
+  const [selectedCategory, setSelectedCategory] = useState('Todas');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
 
@@ -447,6 +442,20 @@ function InventoryTablePage({ client, title, subtitle, mode }) {
     loadProducts();
   }, []);
 
+  const categories = useMemo(() => {
+    const uniqueCategories = new Set(rows.map((item) => inferCategory(item.productName)));
+    return ['Todas', ...Array.from(uniqueCategories).sort((first, second) => first.localeCompare(second))];
+  }, [rows]);
+
+  const visibleRows = useMemo(() => {
+    return rows
+      .filter((item) => selectedCategory === 'Todas' || inferCategory(item.productName) === selectedCategory)
+      .sort((first, second) => {
+        const categoryOrder = inferCategory(first.productName).localeCompare(inferCategory(second.productName));
+        return categoryOrder || first.productName.localeCompare(second.productName);
+      });
+  }, [rows, selectedCategory]);
+
   return (
     <div className="page-stack">
       <PageHeading title={title} subtitle={subtitle} />
@@ -456,6 +465,14 @@ function InventoryTablePage({ client, title, subtitle, mode }) {
           <Search size={18} />
           <input value={sku} onChange={(event) => setSku(event.target.value)} placeholder="SKU123ABC" />
         </div>
+        <label className="select-shell">
+          Categoria
+          <select value={selectedCategory} onChange={(event) => setSelectedCategory(event.target.value)}>
+            {categories.map((category) => (
+              <option key={category} value={category}>{category}</option>
+            ))}
+          </select>
+        </label>
         <button className="primary-button small" onClick={() => loadStock(sku)} type="button">Buscar SKU</button>
       </div>
 
@@ -472,16 +489,15 @@ function InventoryTablePage({ client, title, subtitle, mode }) {
               <th>Stock Actual</th>
               <th>Estado</th>
               <th>Ubicacion</th>
-              <th>Acciones</th>
             </tr>
           </thead>
           <tbody>
             {loading ? (
               <tr>
-                <td colSpan="8"><div className="empty-state">Cargando productos...</div></td>
+                <td colSpan="7"><div className="empty-state">Cargando productos...</div></td>
               </tr>
             ) : null}
-            {rows.map((item) => {
+            {visibleRows.map((item) => {
               const status = item.stock.available === 0 ? 'Agotado' : item.stock.available < 20 ? 'Stock Bajo' : 'Disponible';
               return (
                 <tr key={item.sku}>
@@ -498,14 +514,13 @@ function InventoryTablePage({ client, title, subtitle, mode }) {
                     <div className="stock-bar"><span style={{ width: `${Math.min(100, (item.stock.available / Math.max(item.stock.physical, 1)) * 100)}%` }} /></div>
                   </td>
                   <td><span className={`status-badge ${status === 'Disponible' ? 'ok' : status === 'Agotado' ? 'danger' : 'warning'}`}>{status}</span></td>
-                  <td>{item.site === 'Santa Clara' ? 'A1-E3-N2' : 'B1-E1-N4'}</td>
-                  <td><button className="icon-button ghost"><MoreHorizontal size={19} /></button></td>
+                  <td>Santa Clara</td>
                 </tr>
               );
             })}
-            {!loading && rows.length === 0 ? (
+            {!loading && visibleRows.length === 0 ? (
               <tr>
-                <td colSpan="8"><div className="empty-state">No hay productos registrados</div></td>
+                <td colSpan="7"><div className="empty-state">No hay productos registrados</div></td>
               </tr>
             ) : null}
           </tbody>
