@@ -79,9 +79,12 @@ async function initializeDatabase() {
   await sequelize.authenticate();
   await sequelize.sync();
 
-  await InventoryStock.bulkCreate(initialStock, {
-    updateOnDuplicate: ['productName', 'warehouseSite', 'physicalStock', 'reservedStock', 'availableStock', 'unit', 'lastUpdatedAt']
-  });
+  for (const stock of initialStock) {
+    await InventoryStock.findOrCreate({
+      where: { sku: stock.sku },
+      defaults: stock
+    });
+  }
 }
 
 module.exports = initializeDatabase;

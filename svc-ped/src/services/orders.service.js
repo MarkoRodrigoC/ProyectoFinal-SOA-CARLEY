@@ -9,7 +9,7 @@ class OrdersService {
 
   async registerOrder(payload, identityHeaders) {
     this.validatePayload(payload);
-    await this.validateInventoryAvailability(payload.items);
+    await this.reserveInventoryStock(payload.items);
 
     const order = {
       orderId: crypto.randomUUID(),
@@ -80,6 +80,17 @@ class OrdersService {
     });
 
     await Promise.all(validations);
+  }
+
+  async reserveInventoryStock(items) {
+    const requiredBySku = items.reduce((accumulator, item) => {
+      const sku = item.sku.toUpperCase();
+      accumulator.set(sku, (accumulator.get(sku) || 0) + item.quantity);
+      return accumulator;
+    }, new Map());
+
+    const normalizedItems = Array.from(requiredBySku.entries()).map(([sku, quantity]) => ({ sku, quantity }));
+    await this.inventoryClient.reserveStock(normalizedItems);
   }
 }
 

@@ -30,6 +30,31 @@ class InventoryService {
     };
   }
 
+  async reserveStock(items) {
+    if (!Array.isArray(items) || items.length === 0) {
+      throw new HttpError(400, 'Bad Request', 'Items are required to reserve stock');
+    }
+
+    const invalidItem = items.find((item) => !item.sku || !SKU_PATTERN.test(item.sku) || !Number.isInteger(item.quantity) || item.quantity <= 0);
+    if (invalidItem) {
+      throw new HttpError(400, 'Bad Request', 'Each item must include a valid sku and positive integer quantity');
+    }
+
+    const requiredBySku = items.reduce((accumulator, item) => {
+      const sku = item.sku.toUpperCase();
+      accumulator.set(sku, (accumulator.get(sku) || 0) + item.quantity);
+      return accumulator;
+    }, new Map());
+
+    const normalizedItems = Array.from(requiredBySku.entries()).map(([sku, quantity]) => ({ sku, quantity }));
+    const stocks = await this.inventoryRepository.reserveStockForOrder(normalizedItems);
+
+    return {
+      reserved: true,
+      products: stocks.map((stock) => this.toDto(stock))
+    };
+  }
+
   async findStockBySku(sku) {
     if (!SKU_PATTERN.test(sku)) {
       throw new HttpError(400, 'Bad Request', 'SKU must be alphanumeric and between 3 and 32 characters');

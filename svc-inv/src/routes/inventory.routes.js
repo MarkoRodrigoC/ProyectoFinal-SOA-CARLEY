@@ -10,6 +10,7 @@ const inventoryService = new InventoryService({ inventoryRepository });
 const inventoryController = new InventoryController({ inventoryService });
 
 router.get('/', asyncHandler(inventoryController.list));
+router.post('/reservar', asyncHandler(inventoryController.reserve));
 router.get('/buscar/:sku', asyncHandler(inventoryController.findBySku));
 
 module.exports = router;

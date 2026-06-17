@@ -7,7 +7,7 @@ const HttpError = require('./utils/httpError');
 
 const app = express();
 
-app.use(cors({ origin: env.corsOrigin, methods: ['GET'], allowedHeaders: ['Content-Type', 'X-CARLEY-USER-ID', 'X-CARLEY-ROLE'] }));
+app.use(cors({ origin: env.corsOrigin, methods: ['GET', 'POST'], allowedHeaders: ['Content-Type', 'X-CARLEY-USER-ID', 'X-CARLEY-ROLE'] }));
 app.use(express.json({ limit: '1mb' }));
 
 app.get('/health', (req, res) => {
