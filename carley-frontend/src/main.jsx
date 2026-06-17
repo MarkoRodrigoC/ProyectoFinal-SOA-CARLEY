@@ -246,7 +246,7 @@ function AppShell({ token, identity, onLogout }) {
     <div className="app-shell">
       <aside className="sidebar">
         <div className="sidebar-brand">
-          <div className="brand-mark">GC</div>
+          <img className="sidebar-logo" src={carleyLogo} alt="Carley" />
           <div>
             <strong>Grupo Carley</strong>
             <span>Dashboard Administrativo</span>

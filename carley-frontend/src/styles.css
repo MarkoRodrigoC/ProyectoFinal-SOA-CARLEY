@@ -546,11 +546,13 @@ label {
   margin-bottom: 18px;
 }
 
-.sidebar-brand .brand-mark {
-  width: 42px;
+.sidebar-logo {
+  width: 46px;
   height: 42px;
+  object-fit: contain;
+  padding: 5px;
   border-radius: 7px;
-  font-size: 16px;
+  background: #ffffff;
 }
 
 .nav-list {
