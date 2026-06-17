@@ -23,6 +23,13 @@ Arquitectura base desacoplada para la transformacion del ecosistema digital de C
 |       |   `-- proxy.routes.js
 |       `-- utils/
 |           `-- httpError.js
+|-- carley-frontend/
+|   |-- package.json
+|   |-- .env.example
+|   |-- index.html
+|   `-- src/
+|       |-- main.jsx
+|       `-- styles.css
 |-- svc-sec/
 |   |-- package.json
 |   |-- .env.example
@@ -134,9 +141,16 @@ cd svc-inv && npm start
 cd svc-ped && npm start
 cd svc-tra && npm start
 cd api-gateway && npm start
+cd carley-frontend && npm run dev
 ```
 
-Los clientes deben entrar por `http://localhost:8000`.
+Los clientes API deben entrar por `http://localhost:8000`.
+
+El frontend corre por defecto en:
+
+```text
+http://localhost:5173
+```
 
 ## Persistencia PostgreSQL
 
@@ -257,4 +271,36 @@ Payload ejemplo:
     }
   ]
 }
+```
+
+## Frontend React
+
+`carley-frontend` implementa la capa de presentacion de la Fase 5 con:
+
+```text
+React
+Vite
+Axios
+lucide-react
+```
+
+Pantallas disponibles:
+
+```text
+Login
+Dashboard Principal
+Catalogo de Productos
+Inventario
+Pedidos
+Transporte / Flota
+Facturacion
+Reportes
+Configuracion
+```
+
+Credenciales de demo:
+
+```text
+admin@carley.local
+Admin123!
 ```

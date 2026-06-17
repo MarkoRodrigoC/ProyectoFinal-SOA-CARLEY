@@ -1,0 +1,677 @@
+import React, { useEffect, useMemo, useState } from 'react';
+import { createRoot } from 'react-dom/client';
+import axios from 'axios';
+import {
+  AlertTriangle,
+  BarChart3,
+  Bell,
+  Box,
+  CheckCircle2,
+  ChevronRight,
+  ClipboardList,
+  Eye,
+  EyeOff,
+  FileText,
+  Home,
+  LifeBuoy,
+  Lock,
+  LogOut,
+  Mail,
+  MapPin,
+  MoreHorizontal,
+  Package,
+  Search,
+  Settings,
+  Shield,
+  ShoppingCart,
+  Truck,
+  UserRound,
+  Warehouse
+} from 'lucide-react';
+import './styles.css';
+
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
+
+const api = axios.create({
+  baseURL: API_BASE_URL,
+  timeout: 8000
+});
+
+const demoSkus = ['SKU123ABC', 'REPUESTO778'];
+
+function decodeJwt(token) {
+  try {
+    const payload = token.split('.')[1];
+    return JSON.parse(atob(payload.replace(/-/g, '+').replace(/_/g, '/')));
+  } catch (error) {
+    return null;
+  }
+}
+
+function useSession() {
+  const [token, setToken] = useState(() => localStorage.getItem('carley_token') || '');
+  const identity = useMemo(() => (token ? decodeJwt(token) : null), [token]);
+
+  const saveToken = (nextToken) => {
+    localStorage.setItem('carley_token', nextToken);
+    setToken(nextToken);
+  };
+
+  const logout = () => {
+    localStorage.removeItem('carley_token');
+    setToken('');
+  };
+
+  return { token, identity, saveToken, logout };
+}
+
+function useApi(token) {
+  return useMemo(() => ({
+    async login(credentials) {
+      const response = await api.post('/api/auth/login', credentials);
+      return response.data;
+    },
+    async getInventory(sku) {
+      const response = await api.get(`/api/inventario/buscar/${encodeURIComponent(sku)}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      return response.data;
+    },
+    async getOrders() {
+      const response = await api.get('/api/pedidos', {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      return response.data;
+    },
+    async registerOrder(payload) {
+      const response = await api.post('/api/pedidos/registrar', payload, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      return response.data;
+    },
+    async confirmDelivery(payload) {
+      const response = await api.post('/api/transporte/confirmar-entrega', payload, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      return response.data;
+    }
+  }), [token]);
+}
+
+function LoginPage({ onLogin }) {
+  const [username, setUsername] = useState('admin@carley.local');
+  const [password, setPassword] = useState('Admin123!');
+  const [showPassword, setShowPassword] = useState(false);
+  const [remember, setRemember] = useState(true);
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
+  const client = useApi('');
+
+  async function submit(event) {
+    event.preventDefault();
+    setError('');
+    setLoading(true);
+
+    try {
+      const result = await client.login({ username, password });
+      onLogin(result.accessToken);
+    } catch (requestError) {
+      setError(requestError.response?.data?.message || 'No se pudo iniciar sesion.');
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  return (
+    <main className="login-shell">
+      <section className="login-brand-panel">
+        <div className="brand-lockup">
+          <div className="brand-mark">GC</div>
+          <div>
+            <strong>Grupo Carley</strong>
+            <span>Sistema de Gestion Logistica</span>
+          </div>
+        </div>
+
+        <div className="status-pill">
+          <span />
+          Sistema operativo · En vivo
+        </div>
+
+        <div className="login-copy">
+          <h1>Logistica inteligente <strong>a tu alcance</strong></h1>
+          <p>Monitorea tu flota en tiempo real, gestiona inventarios y optimiza cada ruta desde un solo panel de control.</p>
+        </div>
+
+        <div className="truck-card" aria-hidden="true">
+          <div className="route-dots" />
+          <div className="truck-body">
+            <div className="truck-box">GRUPO CARLEY</div>
+            <div className="truck-cabin" />
+            <div className="truck-line" />
+            <div className="wheel wheel-one" />
+            <div className="wheel wheel-two" />
+            <div className="wheel wheel-three" />
+          </div>
+          <div className="location-pin" />
+        </div>
+      </section>
+
+      <section className="login-form-panel">
+        <form className="login-form" onSubmit={submit}>
+          <div>
+            <h2>Iniciar sesion</h2>
+            <p>Accede al panel de administracion con tus credenciales corporativas.</p>
+          </div>
+
+          <div className="demo-box">
+            <strong>Credenciales de demostracion</strong>
+            <span>admin@carley.local</span>
+            <span>Admin123!</span>
+          </div>
+
+          <label>
+            Correo electronico
+            <div className="input-shell">
+              <Mail size={18} />
+              <input value={username} onChange={(event) => setUsername(event.target.value)} placeholder="usuario@grupocarley.pe" />
+            </div>
+          </label>
+
+          <label>
+            Contrasena
+            <div className="input-shell">
+              <Lock size={18} />
+              <input type={showPassword ? 'text' : 'password'} value={password} onChange={(event) => setPassword(event.target.value)} />
+              <button type="button" className="icon-button ghost" onClick={() => setShowPassword((value) => !value)} aria-label="Mostrar contrasena">
+                {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+              </button>
+            </div>
+          </label>
+
+          <div className="login-row">
+            <label className="check-row">
+              <input type="checkbox" checked={remember} onChange={(event) => setRemember(event.target.checked)} />
+              Recordar sesion
+            </label>
+            <button type="button" className="link-button">Olvidaste tu contrasena?</button>
+          </div>
+
+          {error ? <div className="form-error">{error}</div> : null}
+
+          <button className="primary-button" type="submit" disabled={loading}>
+            {loading ? 'Ingresando...' : 'Ingresar al sistema'}
+            <ChevronRight size={18} />
+          </button>
+
+          <div className="divider"><span>acceso corporativo</span></div>
+
+          <button className="sso-button" type="button">
+            <Shield size={18} />
+            Acceso con SSO Corporativo
+          </button>
+        </form>
+      </section>
+    </main>
+  );
+}
+
+const navigation = [
+  { id: 'dashboard', label: 'Inicio', icon: Home },
+  { id: 'products', label: 'Catalogo de Productos', icon: Box },
+  { id: 'inventory', label: 'Inventario', icon: Warehouse },
+  { id: 'orders', label: 'Pedidos', icon: ShoppingCart },
+  { id: 'transport', label: 'Transporte / Flota', icon: Truck },
+  { id: 'billing', label: 'Facturacion', icon: FileText },
+  { id: 'reports', label: 'Reportes', icon: BarChart3 },
+  { id: 'settings', label: 'Configuracion', icon: Settings }
+];
+
+function AppShell({ token, identity, onLogout }) {
+  const [active, setActive] = useState('dashboard');
+  const [globalSearch, setGlobalSearch] = useState('');
+  const client = useApi(token);
+
+  return (
+    <div className="app-shell">
+      <aside className="sidebar">
+        <div className="sidebar-brand">
+          <div className="brand-mark">GC</div>
+          <div>
+            <strong>Grupo Carley</strong>
+            <span>Dashboard Administrativo</span>
+          </div>
+        </div>
+
+        <nav className="nav-list">
+          {navigation.map((item) => {
+            const Icon = item.icon;
+            return (
+              <button key={item.id} className={`nav-item ${active === item.id ? 'active' : ''}`} onClick={() => setActive(item.id)}>
+                <Icon size={19} />
+                <span>{item.label}</span>
+              </button>
+            );
+          })}
+        </nav>
+
+        <div className="support-card">
+          <strong>Ayuda & Soporte</strong>
+          <span>Necesitas asistencia tecnica?</span>
+          <button>Contactar Soporte</button>
+        </div>
+      </aside>
+
+      <section className="content-shell">
+        <header className="topbar">
+          <div className="search-box">
+            <Search size={19} />
+            <input value={globalSearch} onChange={(event) => setGlobalSearch(event.target.value)} placeholder="Buscar pedidos, productos, clientes..." />
+          </div>
+          <div className="top-actions">
+            <button className="icon-button notification" aria-label="Notificaciones">
+              <Bell size={20} />
+              <span>3</span>
+            </button>
+            <button className="user-chip" type="button">
+              <UserRound size={18} />
+              {identity?.role || 'ADMINISTRADOR'}
+            </button>
+            <button className="icon-button" onClick={onLogout} aria-label="Cerrar sesion">
+              <LogOut size={20} />
+            </button>
+          </div>
+        </header>
+
+        <main className="page-content">
+          {active === 'dashboard' && <DashboardPage client={client} />}
+          {active === 'products' && <ProductsPage client={client} />}
+          {active === 'inventory' && <InventoryPage client={client} />}
+          {active === 'orders' && <OrdersPage client={client} />}
+          {active === 'transport' && <TransportPage client={client} />}
+          {active === 'billing' && <PlaceholderPage title="Facturacion" description="Modulo reservado para la integracion SUNAT de la Fase 6." icon={FileText} />}
+          {active === 'reports' && <PlaceholderPage title="Reportes" description="Indicadores operativos consolidados para direccion logistica." icon={BarChart3} />}
+          {active === 'settings' && <PlaceholderPage title="Configuracion" description="Parametros de operacion, roles y preferencias del sistema." icon={Settings} />}
+        </main>
+      </section>
+    </div>
+  );
+}
+
+function DashboardPage({ client }) {
+  const [orders, setOrders] = useState([]);
+  const [stock, setStock] = useState(null);
+
+  useEffect(() => {
+    Promise.allSettled([client.getOrders(), client.getInventory('SKU123ABC')]).then(([ordersResult, stockResult]) => {
+      if (ordersResult.status === 'fulfilled') {
+        setOrders(ordersResult.value.orders || []);
+      }
+      if (stockResult.status === 'fulfilled') {
+        setStock(stockResult.value);
+      }
+    });
+  }, [client]);
+
+  return (
+    <div className="page-stack">
+      <PageHeading title="Dashboard Principal" subtitle="Vista general de operaciones en tiempo real" />
+
+      <section className="metric-grid">
+        <MetricCard label="Tasa de Entregas a Tiempo" value="94.8%" delta="+2.3%" tone="green" icon={BarChart3} />
+        <MetricCard label="Utilizacion de Flota" value="28/35" helper="Vehiculos activos" tone="blue" icon={Truck} />
+        <MetricCard label="Pedidos Registrados" value={orders.length || 0} helper="Persistidos en PostgreSQL" tone="orange" icon={Package} />
+        <MetricCard label="Stock Disponible" value={stock?.stock?.available ?? '--'} helper="SKU123ABC" tone="red" icon={AlertTriangle} />
+      </section>
+
+      <section className="dashboard-grid">
+        <div className="panel map-panel">
+          <PanelTitle icon={MapPin} title="Monitoreo GPS en Tiempo Real" />
+          <div className="map-canvas">
+            <span className="map-point lima" />
+            <span className="map-point cusco" />
+            <span className="map-point arequipa" />
+            <span className="map-label label-cusco">Cusco</span>
+            <span className="map-label label-arequipa">Arequipa</span>
+            <div className="map-route" />
+          </div>
+        </div>
+
+        <div className="panel">
+          <PanelTitle title="Resumen de Operaciones" />
+          <ProgressRow label="Entregas del Dia" value="24/28" percent={86} color="green" />
+          <ProgressRow label="Rutas Completadas" value="18/22" percent={82} color="blue" />
+          <ProgressRow label="Capacidad de Almacen" value="67%" percent={67} color="orange" />
+          <div className="next-deliveries">
+            <strong>Proximas Entregas</strong>
+            <span><i className="dot green" /> Cusco · 14:30</span>
+            <span><i className="dot blue" /> Arequipa · 18:00</span>
+          </div>
+        </div>
+      </section>
+    </div>
+  );
+}
+
+function ProductsPage({ client }) {
+  return (
+    <InventoryTablePage
+      client={client}
+      title="Catalogo de Productos"
+      subtitle="Consulta productos sincronizados con el inventario logistico"
+      mode="products"
+    />
+  );
+}
+
+function InventoryPage({ client }) {
+  return (
+    <InventoryTablePage
+      client={client}
+      title="Inventario"
+      subtitle="Stock fisico y disponible de la sede Santa Clara"
+      mode="inventory"
+    />
+  );
+}
+
+function InventoryTablePage({ client, title, subtitle, mode }) {
+  const [rows, setRows] = useState([]);
+  const [sku, setSku] = useState('SKU123ABC');
+  const [error, setError] = useState('');
+
+  async function loadStock(targetSku) {
+    setError('');
+    try {
+      const result = await client.getInventory(targetSku);
+      setRows((current) => {
+        const next = current.filter((item) => item.sku !== result.sku);
+        return [result, ...next].slice(0, 8);
+      });
+    } catch (requestError) {
+      setError(requestError.response?.data?.message || 'No se encontro el SKU.');
+    }
+  }
+
+  useEffect(() => {
+    demoSkus.forEach((item) => loadStock(item));
+  }, []);
+
+  return (
+    <div className="page-stack">
+      <PageHeading title={title} subtitle={subtitle} />
+
+      <div className="toolbar-panel">
+        <div className="input-shell compact">
+          <Search size={18} />
+          <input value={sku} onChange={(event) => setSku(event.target.value)} placeholder="SKU123ABC" />
+        </div>
+        <button className="primary-button small" onClick={() => loadStock(sku)} type="button">Buscar SKU</button>
+      </div>
+
+      {error ? <div className="form-error">{error}</div> : null}
+
+      <div className="table-card">
+        <table>
+          <thead>
+            <tr>
+              <th>Imagen</th>
+              <th>SKU</th>
+              <th>Nombre del Producto</th>
+              <th>Categoria</th>
+              <th>Stock Actual</th>
+              <th>Estado</th>
+              <th>Ubicacion</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map((item) => {
+              const status = item.stock.available === 0 ? 'Agotado' : item.stock.available < 20 ? 'Stock Bajo' : 'Disponible';
+              return (
+                <tr key={item.sku}>
+                  <td><div className="product-icon"><Box size={21} /></div></td>
+                  <td>{item.sku}</td>
+                  <td>{item.productName}</td>
+                  <td><span className="tag">{mode === 'products' ? inferCategory(item.productName) : item.site}</span></td>
+                  <td>
+                    <div className="stock-cell">
+                      <span className={`dot ${status === 'Disponible' ? 'green' : status === 'Agotado' ? 'red' : 'orange'}`} />
+                      <strong>{item.stock.available}</strong>
+                      <span>/ {item.stock.physical}</span>
+                    </div>
+                    <div className="stock-bar"><span style={{ width: `${Math.min(100, (item.stock.available / Math.max(item.stock.physical, 1)) * 100)}%` }} /></div>
+                  </td>
+                  <td><span className={`status-badge ${status === 'Disponible' ? 'ok' : status === 'Agotado' ? 'danger' : 'warning'}`}>{status}</span></td>
+                  <td>{item.site === 'Santa Clara' ? 'A1-E3-N2' : 'B1-E1-N4'}</td>
+                  <td><button className="icon-button ghost"><MoreHorizontal size={19} /></button></td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
+
+function OrdersPage({ client }) {
+  const [orders, setOrders] = useState([]);
+  const [status, setStatus] = useState('');
+  const [quantity, setQuantity] = useState(4);
+
+  async function refreshOrders() {
+    const result = await client.getOrders();
+    setOrders(result.orders || []);
+  }
+
+  async function registerOrder() {
+    setStatus('');
+    try {
+      const result = await client.registerOrder({
+        customer: {
+          customerId: 'CLI-1001',
+          name: 'Cliente Industrial Santa Clara',
+          documentNumber: '20600111222'
+        },
+        order: {
+          externalReference: `OC-${Date.now()}`,
+          currency: 'PEN'
+        },
+        items: [{ sku: 'SKU123ABC', quantity: Number(quantity) }]
+      });
+      setStatus(`Pedido registrado: ${result.orderId}`);
+      await refreshOrders();
+    } catch (requestError) {
+      setStatus(requestError.response?.data?.message || 'No se pudo registrar el pedido.');
+    }
+  }
+
+  useEffect(() => {
+    refreshOrders().catch(() => setOrders([]));
+  }, []);
+
+  return (
+    <div className="page-stack">
+      <PageHeading title="Pedidos" subtitle="Registro y seguimiento de ordenes de compra" />
+
+      <section className="split-grid">
+        <div className="panel">
+          <PanelTitle icon={ClipboardList} title="Nuevo Pedido" />
+          <label>
+            SKU
+            <div className="input-shell"><Package size={18} /><input value="SKU123ABC" readOnly /></div>
+          </label>
+          <label>
+            Cantidad
+            <div className="input-shell"><ShoppingCart size={18} /><input type="number" min="1" value={quantity} onChange={(event) => setQuantity(event.target.value)} /></div>
+          </label>
+          <button className="primary-button" onClick={registerOrder} type="button">Registrar pedido</button>
+          {status ? <div className="inline-status">{status}</div> : null}
+        </div>
+
+        <div className="panel">
+          <PanelTitle icon={Package} title="Pedidos Persistidos" />
+          <div className="order-list">
+            {orders.slice(0, 6).map((order) => (
+              <div className="order-row" key={order.orderId}>
+                <div>
+                  <strong>{order.orderId.slice(0, 8)}</strong>
+                  <span>{order.customer?.name}</span>
+                </div>
+                <span className="status-badge ok">{order.status}</span>
+              </div>
+            ))}
+            {orders.length === 0 ? <div className="empty-state">Sin pedidos registrados</div> : null}
+          </div>
+        </div>
+      </section>
+    </div>
+  );
+}
+
+function TransportPage({ client }) {
+  const [orderId, setOrderId] = useState('PEDIDO-DE-PRUEBA-001');
+  const [quantity, setQuantity] = useState(2);
+  const [status, setStatus] = useState('');
+
+  async function confirmDelivery() {
+    setStatus('');
+    try {
+      const result = await client.confirmDelivery({
+        orderId,
+        items: [{ sku: 'SKU123ABC', quantity: Number(quantity) }]
+      });
+      setStatus(`Evento publicado: ${result.event.eventId}`);
+    } catch (requestError) {
+      setStatus(requestError.response?.data?.message || 'No se pudo confirmar la entrega.');
+    }
+  }
+
+  return (
+    <div className="page-stack">
+      <PageHeading title="Transporte / Flota" subtitle="Confirmacion de entregas y seguimiento operativo" />
+
+      <div className="transport-panel panel">
+        <div className="route-summary">
+          <div>
+            <span>Origen</span>
+            <strong>Lima, Lima</strong>
+          </div>
+          <div>
+            <span>Destino</span>
+            <strong>Arequipa, Arequipa</strong>
+          </div>
+        </div>
+
+        <div className="driver-card">
+          <div>
+            <span>Conductor Asignado</span>
+            <strong>Maria Gonzalez Lopez</strong>
+          </div>
+          <div>
+            <span>Llegada Estimada</span>
+            <strong>25/05 18:00</strong>
+          </div>
+        </div>
+
+        <div className="timeline">
+          {['Validado', 'Asignado', 'En Ruta', 'Entregado'].map((step, index) => (
+            <div className={`timeline-step ${index < 3 ? 'done' : ''}`} key={step}>
+              <span>{index < 3 ? <CheckCircle2 size={18} /> : null}</span>
+              <strong>{step}</strong>
+              <small>{index < 3 ? '25/05 12:00' : 'Pendiente'}</small>
+            </div>
+          ))}
+        </div>
+
+        <div className="delivery-form">
+          <label>
+            Pedido
+            <div className="input-shell"><ClipboardList size={18} /><input value={orderId} onChange={(event) => setOrderId(event.target.value)} /></div>
+          </label>
+          <label>
+            Cantidad entregada
+            <div className="input-shell"><Package size={18} /><input type="number" min="1" value={quantity} onChange={(event) => setQuantity(event.target.value)} /></div>
+          </label>
+          <button className="primary-button" type="button" onClick={confirmDelivery}>Confirmar entrega fisica</button>
+        </div>
+
+        {status ? <div className="inline-status">{status}</div> : null}
+
+        <div className="checkpoint-list">
+          <strong>Puntos de Control</strong>
+          <span><i className="dot green" /> Lima (Origen) · 25/05 12:00</span>
+          <span><i className="dot blue" /> Ica (Checkpoint) · 25/05 15:30</span>
+          <span><i className="dot red" /> Arequipa (Destino)</span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function PlaceholderPage({ title, description, icon: Icon }) {
+  return (
+    <div className="placeholder-page">
+      <Icon size={38} />
+      <h2>{title}</h2>
+      <p>{description}</p>
+    </div>
+  );
+}
+
+function PageHeading({ title, subtitle }) {
+  return (
+    <div className="page-heading">
+      <h1>{title}</h1>
+      <p>{subtitle}</p>
+    </div>
+  );
+}
+
+function PanelTitle({ title, icon: Icon }) {
+  return (
+    <div className="panel-title">
+      {Icon ? <Icon size={20} /> : null}
+      <h2>{title}</h2>
+    </div>
+  );
+}
+
+function MetricCard({ label, value, helper, delta, tone, icon: Icon }) {
+  return (
+    <div className="metric-card">
+      <div className={`metric-icon ${tone}`}><Icon size={24} /></div>
+      <span>{label}</span>
+      <strong>{value}</strong>
+      <small>{delta || helper}</small>
+    </div>
+  );
+}
+
+function ProgressRow({ label, value, percent, color }) {
+  return (
+    <div className="progress-row">
+      <div><span>{label}</span><strong>{value}</strong></div>
+      <div className={`progress-bar ${color}`}><span style={{ width: `${percent}%` }} /></div>
+    </div>
+  );
+}
+
+function inferCategory(name) {
+  if (name.toLowerCase().includes('aceite')) return 'Lubricantes';
+  if (name.toLowerCase().includes('filtro')) return 'Filtros';
+  return 'Repuestos';
+}
+
+function Root() {
+  const session = useSession();
+
+  if (!session.token) {
+    return <LoginPage onLogin={session.saveToken} />;
+  }
+
+  return <AppShell token={session.token} identity={session.identity} onLogout={session.logout} />;
+}
+
+createRoot(document.getElementById('root')).render(<Root />);
