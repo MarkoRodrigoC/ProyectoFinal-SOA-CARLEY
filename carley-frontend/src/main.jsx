@@ -104,8 +104,8 @@ function useApi(token) {
 }
 
 function LoginPage({ onLogin }) {
-  const [username, setUsername] = useState('admin@carley.local');
-  const [password, setPassword] = useState('Admin123!');
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [remember, setRemember] = useState(true);
   const [error, setError] = useState('');
@@ -151,7 +151,7 @@ function LoginPage({ onLogin }) {
         <div className="truck-card" aria-hidden="true">
           <div className="route-panel">
             <span>Ruta activa</span>
-            <strong>Lima - Santa Clara</strong>
+            <strong>Lima - A cualquier provincia</strong>
           </div>
           <div className="route-dots" />
           <div className="road-line road-line-one" />
@@ -178,12 +178,6 @@ function LoginPage({ onLogin }) {
           <div>
             <h2>Iniciar sesion</h2>
             <p>Accede al panel de administracion con tus credenciales corporativas.</p>
-          </div>
-
-          <div className="demo-box">
-            <strong>Credenciales de demostracion</strong>
-            <span>admin@carley.local</span>
-            <span>Admin123!</span>
           </div>
 
           <label>
