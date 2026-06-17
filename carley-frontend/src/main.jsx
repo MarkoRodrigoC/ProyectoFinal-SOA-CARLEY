@@ -28,6 +28,7 @@ import {
   UserRound,
   Warehouse
 } from 'lucide-react';
+import carleyLogo from './assets/carley-logo.png';
 import './styles.css';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
@@ -130,9 +131,9 @@ function LoginPage({ onLogin }) {
     <main className="login-shell">
       <section className="login-brand-panel">
         <div className="brand-lockup">
-          <div className="brand-mark">GC</div>
+          <img className="brand-logo" src={carleyLogo} alt="Carley" />
           <div>
-            <strong>Grupo Carley</strong>
+            <strong>CARLEY</strong>
             <span>Sistema de Gestion Logistica</span>
           </div>
         </div>
@@ -148,14 +149,25 @@ function LoginPage({ onLogin }) {
         </div>
 
         <div className="truck-card" aria-hidden="true">
+          <div className="route-panel">
+            <span>Ruta activa</span>
+            <strong>Lima - Santa Clara</strong>
+          </div>
           <div className="route-dots" />
+          <div className="road-line road-line-one" />
+          <div className="road-line road-line-two" />
           <div className="truck-body">
-            <div className="truck-box">GRUPO CARLEY</div>
-            <div className="truck-cabin" />
-            <div className="truck-line" />
-            <div className="wheel wheel-one" />
-            <div className="wheel wheel-two" />
-            <div className="wheel wheel-three" />
+            <div className="truck-trailer">
+              <img src={carleyLogo} alt="" />
+            </div>
+            <div className="truck-cabin">
+              <span className="truck-window" />
+              <span className="truck-grill" />
+            </div>
+            <div className="truck-shadow" />
+            <div className="wheel wheel-one"><span /></div>
+            <div className="wheel wheel-two"><span /></div>
+            <div className="wheel wheel-three"><span /></div>
           </div>
           <div className="location-pin" />
         </div>

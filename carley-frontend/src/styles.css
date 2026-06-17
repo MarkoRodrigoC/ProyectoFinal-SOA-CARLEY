@@ -72,6 +72,16 @@ button {
   font-size: 20px;
 }
 
+.brand-logo {
+  width: 156px;
+  height: 74px;
+  object-fit: contain;
+  padding: 8px 10px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.95);
+  box-shadow: 0 18px 42px rgba(0, 0, 0, 0.18);
+}
+
 .brand-lockup strong,
 .sidebar-brand strong {
   display: block;
@@ -134,82 +144,190 @@ button {
   right: 42px;
   bottom: 34px;
   height: 230px;
-  border-radius: 14px;
-  background: #3b4a60;
+  border: 1px solid rgba(184, 200, 223, 0.18);
+  border-radius: 16px;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.07), rgba(255, 255, 255, 0.02)),
+    #3b4a60;
   overflow: hidden;
+  box-shadow: 0 28px 70px rgba(3, 11, 24, 0.24);
+}
+
+.truck-card::before {
+  content: "";
+  position: absolute;
+  inset: auto 0 0;
+  height: 82px;
+  background:
+    linear-gradient(168deg, transparent 0 20%, rgba(233, 239, 247, 0.18) 21% 64%, transparent 65%),
+    #18283d;
+}
+
+.route-panel {
+  position: absolute;
+  top: 24px;
+  left: 28px;
+  z-index: 2;
+  display: grid;
+  gap: 3px;
+  padding: 13px 16px;
+  border: 1px solid rgba(159, 176, 199, 0.26);
+  border-radius: 12px;
+  color: #dce7f5;
+  background: rgba(18, 32, 51, 0.46);
+  backdrop-filter: blur(6px);
+}
+
+.route-panel span {
+  color: #9fb0c7;
+  font-size: 12px;
+}
+
+.route-panel strong {
+  font-size: 14px;
+}
+
+.road-line {
+  position: absolute;
+  bottom: 38px;
+  height: 4px;
+  border-radius: 999px;
+  background: rgba(159, 176, 199, 0.40);
+}
+
+.road-line-one {
+  left: 42px;
+  width: 158px;
+}
+
+.road-line-two {
+  right: 54px;
+  width: 132px;
 }
 
 .truck-body {
   position: absolute;
-  left: 76px;
-  bottom: 58px;
-  width: 360px;
-  height: 92px;
+  left: 86px;
+  right: 74px;
+  bottom: 46px;
+  height: 112px;
 }
 
-.truck-box {
+.truck-trailer {
   position: absolute;
   left: 0;
-  bottom: 32px;
-  width: 255px;
-  height: 58px;
-  display: grid;
-  place-items: center;
-  color: #fff;
-  font-weight: 800;
-  background: #294cc7;
-  border-radius: 5px 5px 0 0;
-  border-bottom: 8px solid #ff6b1a;
+  bottom: 30px;
+  width: min(360px, 58%);
+  height: 78px;
+  display: flex;
+  align-items: center;
+  padding: 12px 24px;
+  border-radius: 8px 4px 4px 8px;
+  background: linear-gradient(180deg, #f7fbff 0%, #dfe9f4 100%);
+  border-bottom: 8px solid #f4c314;
+  box-shadow: inset 0 -1px 0 rgba(18, 32, 51, 0.08);
+}
+
+.truck-trailer::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -8px;
+  height: 4px;
+  background: #e91e25;
+}
+
+.truck-trailer img {
+  width: 205px;
+  max-width: 88%;
+  height: auto;
+  object-fit: contain;
 }
 
 .truck-cabin {
   position: absolute;
-  left: 255px;
-  bottom: 32px;
-  width: 92px;
-  height: 52px;
-  background: #2d76d2;
-  border-bottom: 8px solid #ff6b1a;
+  left: min(360px, 58%);
+  bottom: 30px;
+  width: 126px;
+  height: 72px;
+  border-radius: 6px 18px 4px 4px;
+  background: linear-gradient(135deg, #2454c9 0%, #3179dd 100%);
+  border-bottom: 8px solid #f4c314;
 }
 
 .truck-cabin::after {
   content: "";
   position: absolute;
-  right: 26px;
-  top: 12px;
-  width: 18px;
-  height: 22px;
-  border-radius: 3px;
-  background: #a7d8ff;
+  right: -28px;
+  bottom: 0;
+  width: 34px;
+  height: 36px;
+  border-radius: 0 10px 3px 0;
+  background: #2566cb;
+  border-bottom: 8px solid #f4c314;
 }
 
-.truck-line {
+.truck-window {
   position: absolute;
-  left: -50px;
-  right: -70px;
-  bottom: 0;
-  height: 48px;
-  background: #172539;
+  top: 13px;
+  right: 18px;
+  width: 34px;
+  height: 28px;
+  border-radius: 5px 12px 5px 5px;
+  background: linear-gradient(135deg, #bfe4ff, #6db7ee);
+  box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.25);
+}
+
+.truck-grill {
+  position: absolute;
+  right: -21px;
+  bottom: 20px;
+  width: 18px;
+  height: 6px;
+  border-radius: 999px;
+  background: #dce7f5;
+}
+
+.truck-shadow {
+  position: absolute;
+  left: -22px;
+  right: -36px;
+  bottom: 16px;
+  height: 14px;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.24);
+  filter: blur(1px);
 }
 
 .wheel {
   position: absolute;
-  bottom: 18px;
-  width: 42px;
-  height: 42px;
+  bottom: 8px;
+  width: 54px;
+  height: 54px;
   border-radius: 50%;
-  background: #0e1726;
-  border: 8px solid #33455e;
+  display: grid;
+  place-items: center;
+  background: #0f1827;
+  border: 9px solid #344961;
+  box-shadow: inset 0 0 0 3px rgba(255, 255, 255, 0.04);
 }
 
-.wheel-one { left: 26px; }
-.wheel-two { left: 130px; }
-.wheel-three { left: 264px; }
+.wheel span {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #91a5bd;
+}
+
+.wheel-one { left: 42px; }
+.wheel-two { left: min(286px, 46%); }
+.wheel-three { left: calc(min(360px, 58%) + 64px); }
 
 .location-pin {
   position: absolute;
-  right: 150px;
-  top: 64px;
+  right: 122px;
+  top: 56px;
   width: 20px;
   height: 20px;
   border-radius: 50%;
@@ -219,13 +337,14 @@ button {
 
 .route-dots {
   position: absolute;
-  left: 38px;
-  top: 84px;
-  width: 86px;
-  height: 70px;
-  border-left: 2px dashed #5490cd;
-  border-bottom: 2px dashed #5490cd;
-  border-radius: 0 0 0 70px;
+  left: 54px;
+  top: 98px;
+  width: 96px;
+  height: 58px;
+  border-left: 2px dashed #7ab7f0;
+  border-bottom: 2px dashed #7ab7f0;
+  border-radius: 0 0 0 64px;
+  opacity: 0.78;
 }
 
 .login-form-panel {
