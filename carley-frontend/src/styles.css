@@ -476,6 +476,7 @@ label {
 
 .primary-button,
 .sso-button,
+.support-card a,
 .support-card button {
   min-height: 48px;
   display: inline-flex;
@@ -614,10 +615,13 @@ label {
   font-size: 14px;
 }
 
-.support-card button {
+.support-card a {
   min-height: 38px;
   color: #fff;
   background: var(--blue);
+  border-radius: 8px;
+  text-decoration: none;
+  font-weight: 800;
 }
 
 .content-shell {

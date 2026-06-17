@@ -266,7 +266,13 @@ function AppShell({ token, identity, onLogout }) {
         <div className="support-card">
           <strong>Ayuda & Soporte</strong>
           <span>Necesitas asistencia tecnica?</span>
-          <button>Contactar Soporte</button>
+          <a
+            href="https://wa.me/51927442969?text=Hola%20Frank%20Alexzander%20Paraguay%2C%20necesito%20soporte%20con%20el%20sistema%20CARLEY."
+            target="_blank"
+            rel="noreferrer"
+          >
+            Contactar Soporte
+          </a>
         </div>
       </aside>
 
