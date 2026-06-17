@@ -36,6 +36,7 @@ app.get('/', (req, res) => {
       login: 'POST /api/auth/login'
     },
     protectedEndpoints: {
+      inventoryList: 'GET /api/inventario',
       inventory: 'GET /api/inventario/buscar/:sku',
       registerOrder: 'POST /api/pedidos/registrar',
       listOrders: 'GET /api/pedidos',

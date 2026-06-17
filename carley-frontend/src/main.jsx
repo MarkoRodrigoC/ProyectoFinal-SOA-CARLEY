@@ -37,8 +37,6 @@ const api = axios.create({
   timeout: 8000
 });
 
-const demoSkus = ['SKU123ABC', 'REPUESTO778'];
-
 function decodeJwt(token) {
   try {
     const payload = token.split('.')[1];
@@ -73,6 +71,12 @@ function useApi(token) {
     },
     async getInventory(sku) {
       const response = await api.get(`/api/inventario/buscar/${encodeURIComponent(sku)}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      return response.data;
+    },
+    async getInventoryList() {
+      const response = await api.get('/api/inventario', {
         headers: { Authorization: `Bearer ${token}` }
       });
       return response.data;
@@ -379,6 +383,20 @@ function InventoryTablePage({ client, title, subtitle, mode }) {
   const [rows, setRows] = useState([]);
   const [sku, setSku] = useState('SKU123ABC');
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState(true);
+
+  async function loadProducts() {
+    setError('');
+    setLoading(true);
+    try {
+      const result = await client.getInventoryList();
+      setRows(result.products || []);
+    } catch (requestError) {
+      setError(requestError.response?.data?.message || 'No se pudo cargar el inventario.');
+    } finally {
+      setLoading(false);
+    }
+  }
 
   async function loadStock(targetSku) {
     setError('');
@@ -386,7 +404,7 @@ function InventoryTablePage({ client, title, subtitle, mode }) {
       const result = await client.getInventory(targetSku);
       setRows((current) => {
         const next = current.filter((item) => item.sku !== result.sku);
-        return [result, ...next].slice(0, 8);
+        return [result, ...next];
       });
     } catch (requestError) {
       setError(requestError.response?.data?.message || 'No se encontro el SKU.');
@@ -394,7 +412,7 @@ function InventoryTablePage({ client, title, subtitle, mode }) {
   }
 
   useEffect(() => {
-    demoSkus.forEach((item) => loadStock(item));
+    loadProducts();
   }, []);
 
   return (
@@ -426,6 +444,11 @@ function InventoryTablePage({ client, title, subtitle, mode }) {
             </tr>
           </thead>
           <tbody>
+            {loading ? (
+              <tr>
+                <td colSpan="8"><div className="empty-state">Cargando productos...</div></td>
+              </tr>
+            ) : null}
             {rows.map((item) => {
               const status = item.stock.available === 0 ? 'Agotado' : item.stock.available < 20 ? 'Stock Bajo' : 'Disponible';
               return (
@@ -448,6 +471,11 @@ function InventoryTablePage({ client, title, subtitle, mode }) {
                 </tr>
               );
             })}
+            {!loading && rows.length === 0 ? (
+              <tr>
+                <td colSpan="8"><div className="empty-state">No hay productos registrados</div></td>
+              </tr>
+            ) : null}
           </tbody>
         </table>
       </div>
@@ -659,9 +687,15 @@ function ProgressRow({ label, value, percent, color }) {
 }
 
 function inferCategory(name) {
-  if (name.toLowerCase().includes('aceite')) return 'Lubricantes';
-  if (name.toLowerCase().includes('filtro')) return 'Filtros';
-  return 'Repuestos';
+  const value = name.toLowerCase();
+  if (['arroz', 'azucar', 'aceite', 'fideo', 'avena', 'harina', 'sal', 'lenteja', 'frejol', 'quinua', 'cereal'].some((keyword) => value.includes(keyword))) return 'Abarrotes';
+  if (['leche', 'queso', 'yogurt', 'mantequilla', 'huevo'].some((keyword) => value.includes(keyword))) return 'Lacteos';
+  if (['pollo', 'carne', 'pescado', 'atun'].some((keyword) => value.includes(keyword))) return 'Proteinas';
+  if (['papa', 'cebolla', 'tomate', 'zanahoria', 'platano', 'manzana', 'naranja'].some((keyword) => value.includes(keyword))) return 'Frutas y Verduras';
+  if (['agua', 'gaseosa', 'jugo', 'cafe', 'te'].some((keyword) => value.includes(keyword))) return 'Bebidas';
+  if (['detergente', 'lejia', 'lavavajilla', 'papel', 'toalla', 'bolsas'].some((keyword) => value.includes(keyword))) return 'Limpieza';
+  if (['jabon', 'shampoo', 'pasta dental', 'cepillo', 'panal', 'toallas humedas', 'alcohol', 'mascarillas'].some((keyword) => value.includes(keyword))) return 'Cuidado Personal';
+  return 'Supermercado';
 }
 
 function Root() {

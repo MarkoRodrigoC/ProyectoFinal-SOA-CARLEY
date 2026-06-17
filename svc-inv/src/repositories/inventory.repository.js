@@ -4,6 +4,17 @@ const sequelize = require('../database/sequelize');
 const HttpError = require('../utils/httpError');
 
 class InventoryRepository {
+  async listSantaClaraStocks() {
+    const stocks = await InventoryStock.findAll({
+      where: {
+        warehouseSite: 'Santa Clara'
+      },
+      order: [['sku', 'ASC']]
+    });
+
+    return stocks.map((stock) => stock.get({ plain: true }));
+  }
+
   async findSantaClaraStockBySku(sku) {
     const stock = await InventoryStock.findOne({
       where: {
