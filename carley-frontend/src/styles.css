@@ -1054,6 +1054,27 @@ label {
   padding: 16px;
 }
 
+.active-filter {
+  width: fit-content;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 9px 12px;
+  border: 1px solid #cbd8f3;
+  border-radius: 999px;
+  color: #29405f;
+  background: #eef3ff;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.active-filter button {
+  border: 0;
+  color: var(--blue);
+  background: transparent;
+  font-weight: 800;
+}
+
 .table-card {
   overflow: auto;
 }

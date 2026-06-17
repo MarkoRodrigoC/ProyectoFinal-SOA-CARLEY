@@ -408,6 +408,7 @@ function InventoryPage({ client }) {
 function InventoryTablePage({ client, title, subtitle, mode }) {
   const [rows, setRows] = useState([]);
   const [sku, setSku] = useState('SKU123ABC');
+  const [skuFilter, setSkuFilter] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('Todas');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
@@ -425,15 +426,25 @@ function InventoryTablePage({ client, title, subtitle, mode }) {
     }
   }
 
-  async function loadStock(targetSku) {
+  async function searchStock(targetSku) {
     setError('');
+    const normalizedSku = targetSku.trim().toUpperCase();
+    if (!normalizedSku) {
+      setSkuFilter('');
+      return;
+    }
+
     try {
-      const result = await client.getInventory(targetSku);
+      const result = await client.getInventory(normalizedSku);
       setRows((current) => {
         const next = current.filter((item) => item.sku !== result.sku);
         return [result, ...next];
       });
+      setSku(result.sku);
+      setSkuFilter(result.sku);
+      setSelectedCategory('Todas');
     } catch (requestError) {
+      setSkuFilter('');
       setError(requestError.response?.data?.message || 'No se encontro el SKU.');
     }
   }
@@ -450,11 +461,12 @@ function InventoryTablePage({ client, title, subtitle, mode }) {
   const visibleRows = useMemo(() => {
     return rows
       .filter((item) => selectedCategory === 'Todas' || inferCategory(item.productName) === selectedCategory)
+      .filter((item) => !skuFilter || item.sku.toUpperCase() === skuFilter)
       .sort((first, second) => {
         const categoryOrder = inferCategory(first.productName).localeCompare(inferCategory(second.productName));
         return categoryOrder || first.productName.localeCompare(second.productName);
       });
-  }, [rows, selectedCategory]);
+  }, [rows, selectedCategory, skuFilter]);
 
   return (
     <div className="page-stack">
@@ -463,7 +475,16 @@ function InventoryTablePage({ client, title, subtitle, mode }) {
       <div className="toolbar-panel">
         <div className="input-shell compact">
           <Search size={18} />
-          <input value={sku} onChange={(event) => setSku(event.target.value)} placeholder="SKU123ABC" />
+          <input
+            value={sku}
+            onChange={(event) => setSku(event.target.value)}
+            onKeyDown={(event) => {
+              if (event.key === 'Enter') {
+                searchStock(sku);
+              }
+            }}
+            placeholder="SKU123ABC"
+          />
         </div>
         <label className="select-shell">
           Categoria
@@ -473,8 +494,15 @@ function InventoryTablePage({ client, title, subtitle, mode }) {
             ))}
           </select>
         </label>
-        <button className="primary-button small" onClick={() => loadStock(sku)} type="button">Buscar SKU</button>
+        <button className="primary-button small" onClick={() => searchStock(sku)} type="button">Buscar SKU</button>
       </div>
+
+      {skuFilter ? (
+        <div className="active-filter">
+          <span>Mostrando SKU {skuFilter}</span>
+          <button type="button" onClick={() => setSkuFilter('')}>Ver todos</button>
+        </div>
+      ) : null}
 
       {error ? <div className="form-error">{error}</div> : null}
 
