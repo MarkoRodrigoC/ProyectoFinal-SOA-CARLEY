@@ -1,0 +1,15 @@
+{
+  "name": "carley-svc-fac",
+  "version": "1.0.0",
+  "description": "Microservicio de facturacion academica CARLEY para generacion dinamica de comprobantes PDF.",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node src/server.js"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "pdfkit": "^0.15.2"
+  }
+}

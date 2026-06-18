@@ -120,6 +120,24 @@ Arquitectura base desacoplada para la transformacion del ecosistema digital de C
         `-- utils/
             |-- asyncHandler.js
             `-- httpError.js
+`-- svc-fac/
+    |-- package.json
+    |-- .env.example
+    `-- src/
+        |-- app.js
+        |-- server.js
+        |-- config/
+        |   `-- env.js
+        |-- controllers/
+        |   `-- billing.controller.js
+        |-- middlewares/
+        |   `-- errorHandler.js
+        |-- routes/
+        |   `-- billing.routes.js
+        |-- services/
+        |   `-- invoicePdf.service.js
+        `-- utils/
+            `-- httpError.js
 ```
 
 ## Arranque local
@@ -140,6 +158,7 @@ cd svc-sec && npm start
 cd svc-inv && npm start
 cd svc-ped && npm start
 cd svc-tra && npm start
+cd svc-fac && npm start
 cd api-gateway && npm start
 cd carley-frontend && npm run dev
 ```
@@ -190,6 +209,28 @@ carley.pedidos.entregados
 `SVC-INV` consume esa cola al iniciar. Cuando recibe un evento `PedidoEntregado`, descuenta stock fisico y disponible en PostgreSQL. Tambien registra el `eventId` en `processed_inventory_events` para evitar reprocesar dos veces el mismo evento.
 
 Si `SVC-INV` esta apagado, RabbitMQ conserva el mensaje. Al volver a levantar `SVC-INV`, el consumidor procesa los mensajes pendientes.
+
+## Facturacion PDF
+
+`SVC-FAC` genera comprobantes PDF academicos sobre la marcha con `PDFKit`.
+
+Puerto local:
+
+```text
+3004
+```
+
+El API Gateway enruta el endpoint protegido:
+
+```text
+POST http://localhost:8000/api/facturacion/generar
+```
+
+La respuesta es un stream binario con:
+
+```text
+Content-Type: application/pdf
+```
 
 ## Contratos base
 
@@ -273,6 +314,30 @@ Payload ejemplo:
 }
 ```
 
+### Facturacion
+
+`POST http://localhost:8000/api/facturacion/generar`
+
+Roles permitidos: `ADMINISTRADOR`.
+
+Payload ejemplo:
+
+```json
+{
+  "orderId": "FAC-2026-001",
+  "cliente": "Cencosud Retail Peru / Popeyes Puruchuco / Bembos Puruchuco",
+  "fecha": "2026-06-17",
+  "items": [
+    {
+      "sku": "PROD-001",
+      "name": "Bandeja Logistica Estandar",
+      "qty": 50,
+      "price": 12.5
+    }
+  ]
+}
+```
+
 ## Frontend React
 
 `carley-frontend` implementa la capa de presentacion de la Fase 5 con:
@@ -289,7 +354,6 @@ Pantallas disponibles:
 ```text
 Login
 Dashboard Principal
-Catalogo de Productos
 Inventario
 Pedidos
 Transporte / Flota

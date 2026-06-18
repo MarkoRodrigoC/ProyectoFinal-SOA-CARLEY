@@ -10,5 +10,9 @@ module.exports = [
   {
     prefix: '/api/transporte',
     roles: ['ADMINISTRADOR']
+  },
+  {
+    prefix: '/api/facturacion',
+    roles: ['ADMINISTRADOR']
   }
 ];
