@@ -566,6 +566,7 @@ function InventoryTablePage({ client, title, subtitle, mode }) {
 
 function OrdersPage({ client }) {
   const [orders, setOrders] = useState([]);
+  const [products, setProducts] = useState([]);
   const [status, setStatus] = useState('');
   const [sku, setSku] = useState('');
   const [quantity, setQuantity] = useState('');
@@ -662,7 +663,30 @@ function OrdersPage({ client }) {
 
   useEffect(() => {
     refreshOrders().catch(() => setOrders([]));
+    client.getInventoryList()
+      .then((result) => setProducts(result.products || []))
+      .catch(() => setProducts([]));
   }, []);
+
+  const skuSuggestions = useMemo(() => {
+    const query = sku.trim().toLowerCase();
+    if (query.length === 0) {
+      return [];
+    }
+
+    return products
+      .filter((product) => (
+        product.sku.toLowerCase().startsWith(query)
+        || product.productName.toLowerCase().startsWith(query)
+        || product.productName.toLowerCase().includes(` ${query}`)
+      ))
+      .slice(0, 6);
+  }, [products, sku]);
+
+  function selectSuggestion(product) {
+    setSku(product.sku);
+    setStatus('');
+  }
 
   return (
     <div className="page-stack">
@@ -673,9 +697,21 @@ function OrdersPage({ client }) {
           <PanelTitle icon={ClipboardList} title="Nuevo Pedido" />
           <label>
             SKU
-            <div className="input-shell">
-              <Package size={18} />
-              <input value={sku} onChange={(event) => setSku(event.target.value)} placeholder="Ej. ARROZ001" />
+            <div className="autocomplete-shell">
+              <div className="input-shell">
+                <Package size={18} />
+                <input value={sku} onChange={(event) => setSku(event.target.value)} placeholder="Ej. ARROZ001 o leche" />
+              </div>
+              {skuSuggestions.length > 0 ? (
+                <div className="suggestion-list">
+                  {skuSuggestions.map((product) => (
+                    <button type="button" key={product.sku} onClick={() => selectSuggestion(product)}>
+                      <strong>{product.sku}</strong>
+                      <span>{product.productName}</span>
+                    </button>
+                  ))}
+                </div>
+              ) : null}
             </div>
           </label>
           <label>
