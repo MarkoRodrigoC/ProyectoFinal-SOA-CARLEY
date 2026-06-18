@@ -3,7 +3,6 @@ import { createRoot } from 'react-dom/client';
 import axios from 'axios';
 import {
   AlertTriangle,
-  BarChart3,
   Bell,
   Box,
   ChevronRight,
@@ -281,7 +280,6 @@ const navigation = [
   { id: 'orders', label: 'Pedidos', icon: ShoppingCart },
   { id: 'transport', label: 'Transporte / Flota', icon: Truck },
   { id: 'billing', label: 'Facturacion', icon: FileText },
-  { id: 'reports', label: 'Reportes', icon: BarChart3 },
   { id: 'settings', label: 'Configuracion', icon: Settings }
 ];
 
@@ -348,7 +346,6 @@ function AppShell({ token, identity, onLogout }) {
           {active === 'orders' && <OrdersPage client={client} />}
           {active === 'transport' && <TransportPlannerPage client={client} />}
           {active === 'billing' && <BillingPage client={client} />}
-          {active === 'reports' && <PlaceholderPage title="Reportes" description="Indicadores operativos consolidados para direccion logistica." icon={BarChart3} />}
           {active === 'settings' && <SettingsPage />}
         </main>
       </section>
