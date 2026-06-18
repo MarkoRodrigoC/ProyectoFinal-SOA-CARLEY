@@ -1,5 +1,9 @@
+const path = require('path');
 const PDFDocument = require('pdfkit');
 const HttpError = require('../utils/httpError');
+
+const LOGO_PATH = path.join(__dirname, '..', 'assets', 'carley-logo.png');
+const SIGNATURE_PATH = path.join(__dirname, '..', 'assets', 'firma-horizontal.jpg');
 
 class InvoicePdfService {
   generateInvoiceStream(payload) {
@@ -14,10 +18,11 @@ class InvoicePdfService {
       }
     });
 
-    this.renderHeader(doc);
+    this.renderHeader(doc, payload);
     this.renderCustomerData(doc, payload);
     this.renderItemsTable(doc, payload.items);
     this.renderTotals(doc, payload.items);
+    this.renderSignature(doc);
     this.renderFooter(doc);
 
     doc.end();
@@ -52,38 +57,34 @@ class InvoicePdfService {
     }
   }
 
-  renderHeader(doc) {
-    const logoX = 48;
-    const logoY = 48;
-
-    doc
-      .roundedRect(logoX, logoY, 120, 54, 8)
-      .strokeColor('#cbd8f3')
-      .lineWidth(1)
-      .stroke();
+  renderHeader(doc, payload) {
+    doc.image(LOGO_PATH, 48, 48, {
+      fit: [132, 64],
+      align: 'left',
+      valign: 'center'
+    });
 
     doc
       .font('Helvetica-Bold')
       .fontSize(18)
-      .fillColor('#294cc7')
-      .text('CARLEY', logoX, logoY + 12, { width: 120, align: 'center' })
-      .font('Helvetica')
-      .fontSize(8)
-      .fillColor('#58708f')
-      .text('Siempre Soluciones', logoX, logoY + 34, { width: 120, align: 'center' });
-
-    doc
-      .font('Helvetica-Bold')
-      .fontSize(20)
       .fillColor('#122033')
-      .text('FACTURA DE TRANSPORTE - CARLEY LOGÍSTICA', 205, 52, {
+      .text('FACTURA DE TRANSPORTE - CARLEY LOG\u00cdSTICA', 205, 52, {
         width: 340,
         align: 'right'
       });
 
     doc
-      .moveTo(48, 125)
-      .lineTo(547, 125)
+      .font('Helvetica-Bold')
+      .fontSize(14)
+      .fillColor('#294cc7')
+      .text(String(payload.cliente), 170, 98, {
+        width: 260,
+        align: 'center'
+      });
+
+    doc
+      .moveTo(48, 130)
+      .lineTo(547, 130)
       .strokeColor('#dce5f1')
       .stroke();
   }
@@ -93,7 +94,7 @@ class InvoicePdfService {
       .font('Helvetica-Bold')
       .fontSize(13)
       .fillColor('#122033')
-      .text('Datos del Cliente', 48, 148);
+      .text('Datos del Cliente', 48, 152);
 
     const rows = [
       ['Cliente', payload.cliente],
@@ -101,7 +102,7 @@ class InvoicePdfService {
       ['Fecha de emision', payload.fecha]
     ];
 
-    let y = 174;
+    let y = 178;
     rows.forEach(([label, value]) => {
       doc
         .font('Helvetica-Bold')
@@ -180,7 +181,7 @@ class InvoicePdfService {
     const igv = subtotal * 0.18;
     const total = subtotal + igv;
     const x = 350;
-    let y = Math.max(doc.y, 540);
+    let y = Math.max(doc.y, 520);
 
     [
       ['Subtotal', subtotal],
@@ -195,6 +196,34 @@ class InvoicePdfService {
         .text(this.money(amount), x + 110, y, { width: 88, align: 'right' });
       y += index === 1 ? 24 : 20;
     });
+
+    doc.y = y;
+  }
+
+  renderSignature(doc) {
+    const y = Math.max(doc.y + 24, 625);
+
+    doc
+      .font('Helvetica-Bold')
+      .fontSize(10)
+      .fillColor('#122033')
+      .text('Firma del encargado receptor', 48, y, { width: 250 });
+
+    doc.image(SIGNATURE_PATH, 48, y + 18, {
+      fit: [240, 82],
+      align: 'center',
+      valign: 'center'
+    });
+
+    doc
+      .moveTo(48, y + 110)
+      .lineTo(288, y + 110)
+      .strokeColor('#58708f')
+      .stroke()
+      .font('Helvetica')
+      .fontSize(9)
+      .fillColor('#58708f')
+      .text('Conformidad de recepcion', 48, y + 116, { width: 240, align: 'center' });
   }
 
   renderFooter(doc) {
@@ -203,7 +232,7 @@ class InvoicePdfService {
       .fontSize(9)
       .fillColor('#58708f')
       .text(
-        'Comprobante emitido de forma automática tras confirmación de entrega por SVC-TRA',
+        'Comprobante emitido de forma autom\u00e1tica tras confirmaci\u00f3n de entrega por SVC-TRA',
         48,
         760,
         { width: 499, align: 'center' }

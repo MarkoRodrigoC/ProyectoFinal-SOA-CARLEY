@@ -141,6 +141,13 @@ function useApi(token) {
         headers: { Authorization: `Bearer ${token}` }
       });
       return response.data;
+    },
+    async generateInvoice(payload) {
+      const response = await api.post('/api/facturacion/generar', payload, {
+        headers: { Authorization: `Bearer ${token}` },
+        responseType: 'blob'
+      });
+      return response.data;
     }
   }), [token]);
 }
@@ -340,7 +347,7 @@ function AppShell({ token, identity, onLogout }) {
           {active === 'products' && <ProductsPage client={client} />}
           {active === 'orders' && <OrdersPage client={client} />}
           {active === 'transport' && <TransportPlannerPage client={client} />}
-          {active === 'billing' && <PlaceholderPage title="Facturacion" description="Modulo reservado para la integracion SUNAT de la Fase 6." icon={FileText} />}
+          {active === 'billing' && <BillingPage client={client} />}
           {active === 'reports' && <PlaceholderPage title="Reportes" description="Indicadores operativos consolidados para direccion logistica." icon={BarChart3} />}
           {active === 'settings' && <SettingsPage />}
         </main>
@@ -1077,6 +1084,94 @@ function TransportPlannerPage({ client }) {
   );
 }
 
+function BillingPage({ client }) {
+  const [orders, setOrders] = useState([]);
+  const [products, setProducts] = useState([]);
+  const [status, setStatus] = useState('');
+  const [loadingOrderId, setLoadingOrderId] = useState('');
+
+  useEffect(() => {
+    Promise.allSettled([client.getOrders(), client.getInventoryList()]).then(([ordersResult, inventoryResult]) => {
+      if (ordersResult.status === 'fulfilled') {
+        setOrders(ordersResult.value.orders || []);
+      }
+
+      if (inventoryResult.status === 'fulfilled') {
+        setProducts(inventoryResult.value.products || []);
+      }
+    });
+  }, [client]);
+
+  const productBySku = useMemo(() => (
+    products.reduce((accumulator, product) => {
+      accumulator[product.sku] = product;
+      return accumulator;
+    }, {})
+  ), [products]);
+
+  async function openInvoice(order, index) {
+    setStatus('');
+    setLoadingOrderId(order.orderId);
+
+    try {
+      const payload = buildInvoicePayload(order, index, orders.length, productBySku);
+      const pdfWindow = window.open('', '_blank', 'noopener,noreferrer');
+      const pdfBlob = await client.generateInvoice(payload);
+      const url = URL.createObjectURL(pdfBlob);
+      if (pdfWindow) {
+        pdfWindow.location.href = url;
+      } else {
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `${payload.orderId}.pdf`;
+        link.click();
+      }
+      setStatus(`PDF generado para ${payload.orderId}.`);
+      window.setTimeout(() => URL.revokeObjectURL(url), 30000);
+    } catch (requestError) {
+      setStatus(requestError.response?.data?.message || 'No se pudo generar el comprobante PDF.');
+    } finally {
+      setLoadingOrderId('');
+    }
+  }
+
+  return (
+    <div className="page-stack">
+      <PageHeading title="Facturacion" subtitle="Comprobantes PDF generados desde los pedidos registrados" />
+
+      <div className="panel">
+        <PanelTitle icon={FileText} title="Comprobantes PDF" />
+        <div className="billing-list">
+          {orders.map((order, index) => {
+            const invoiceCode = formatOrderDisplayCode(order, index, orders.length);
+            return (
+              <div className="billing-row" key={order.orderId}>
+                <div className="billing-doc-icon">
+                  <FileText size={22} />
+                </div>
+                <div>
+                  <strong>{invoiceCode}.pdf</strong>
+                  <span>{order.customer?.name} - {order.items?.length || 0} producto(s)</span>
+                </div>
+                <button
+                  className="secondary-button"
+                  type="button"
+                  onClick={() => openInvoice(order, index)}
+                  disabled={loadingOrderId === order.orderId}
+                >
+                  {loadingOrderId === order.orderId ? 'Generando...' : 'Ver PDF'}
+                </button>
+              </div>
+            );
+          })}
+          {orders.length === 0 ? <div className="empty-state">Aun no hay pedidos para facturar</div> : null}
+        </div>
+        {status ? <div className="inline-status">{status}</div> : null}
+      </div>
+    </div>
+  );
+}
+
 function PlaceholderPage({ title, description, icon: Icon }) {
   return (
     <div className="placeholder-page">
@@ -1205,6 +1300,43 @@ function formatOrderDisplayCode(order, index, totalOrders) {
   }
 
   return `${getStoreCode(order.customer?.name)}#${Math.max(totalOrders - index, 1)}`;
+}
+
+function buildInvoicePayload(order, index, totalOrders, productBySku) {
+  const orderCode = formatOrderDisplayCode(order, index, totalOrders);
+  const items = (order.items || []).map((item) => {
+    const product = productBySku[item.sku];
+    const productName = product?.productName || item.productName || item.sku;
+    return {
+      sku: item.sku,
+      name: productName,
+      qty: item.quantity,
+      price: inferUnitPrice(productName)
+    };
+  });
+
+  return {
+    orderId: orderCode,
+    cliente: order.customer?.name || 'Cliente CARLEY',
+    fecha: new Date().toISOString().slice(0, 10),
+    items
+  };
+}
+
+function inferUnitPrice(productName = '') {
+  const category = inferCategory(productName);
+  const prices = {
+    Abarrotes: 8.9,
+    Lacteos: 6.5,
+    Proteinas: 14.9,
+    'Frutas y Verduras': 4.8,
+    Bebidas: 3.9,
+    Limpieza: 11.5,
+    'Cuidado Personal': 9.8,
+    Supermercado: 7.5
+  };
+
+  return prices[category] || 7.5;
 }
 
 function readTransportAssignments() {
