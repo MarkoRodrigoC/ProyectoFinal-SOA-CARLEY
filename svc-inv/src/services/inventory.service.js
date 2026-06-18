@@ -55,6 +55,19 @@ class InventoryService {
     };
   }
 
+  async updateStockQuantity(sku, physicalStock) {
+    if (!sku || !SKU_PATTERN.test(sku)) {
+      throw new HttpError(400, 'Bad Request', 'SKU must be alphanumeric and between 3 and 32 characters');
+    }
+
+    if (!Number.isInteger(physicalStock) || physicalStock < 0) {
+      throw new HttpError(400, 'Bad Request', 'Physical stock must be a positive integer or zero');
+    }
+
+    const stock = await this.inventoryRepository.updateSantaClaraPhysicalStock(sku, physicalStock);
+    return this.toDto(stock);
+  }
+
   async findStockBySku(sku) {
     if (!SKU_PATTERN.test(sku)) {
       throw new HttpError(400, 'Bad Request', 'SKU must be alphanumeric and between 3 and 32 characters');

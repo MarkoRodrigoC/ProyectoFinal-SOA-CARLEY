@@ -11,6 +11,7 @@ const inventoryController = new InventoryController({ inventoryService });
 
 router.get('/', asyncHandler(inventoryController.list));
 router.post('/reservar', asyncHandler(inventoryController.reserve));
+router.post('/actualizar-stock', asyncHandler(inventoryController.updateStock));
 router.get('/buscar/:sku', asyncHandler(inventoryController.findBySku));
 
 module.exports = router;

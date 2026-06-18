@@ -1207,7 +1207,7 @@ label {
 
 table {
   width: 100%;
-  min-width: 880px;
+  min-width: 1020px;
   border-collapse: collapse;
 }
 
@@ -1268,6 +1268,49 @@ td {
 .status-badge.ok { background: var(--green); }
 .status-badge.warning { background: #f97316; }
 .status-badge.danger { background: var(--red); }
+
+.table-action {
+  min-height: 34px;
+  padding: 0 14px;
+  border: 0;
+  border-radius: 8px;
+  color: #fff;
+  background: var(--blue);
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.stock-edit {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.stock-edit input {
+  width: 82px;
+  min-height: 34px;
+  padding: 0 10px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  color: var(--text);
+  font-weight: 800;
+}
+
+.stock-edit button {
+  min-height: 34px;
+  padding: 0 12px;
+  border: 0;
+  border-radius: 8px;
+  color: #fff;
+  background: var(--green);
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.stock-edit button.ghost {
+  color: #294cc7;
+  background: #eef3ff;
+}
 
 .order-row {
   display: flex;

@@ -122,6 +122,12 @@ function useApi(token) {
       });
       return response.data;
     },
+    async updateInventoryStock(payload) {
+      const response = await api.post('/api/inventario/actualizar-stock', payload, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      return response.data;
+    },
     async getOrders() {
       const response = await api.get('/api/pedidos', {
         headers: { Authorization: `Bearer ${token}` }
@@ -462,6 +468,9 @@ function InventoryTablePage({ client, title, subtitle, mode }) {
   const [selectedCategory, setSelectedCategory] = useState('Todas');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
+  const [editingSku, setEditingSku] = useState('');
+  const [stockDraft, setStockDraft] = useState('');
+  const [savingSku, setSavingSku] = useState('');
 
   async function loadProducts() {
     setError('');
@@ -496,6 +505,43 @@ function InventoryTablePage({ client, title, subtitle, mode }) {
     } catch (requestError) {
       setSkuFilter('');
       setError(requestError.response?.data?.message || 'No se encontro el SKU.');
+    }
+  }
+
+  function startStockEdit(item) {
+    setEditingSku(item.sku);
+    setStockDraft(String(item.stock.physical));
+    setError('');
+  }
+
+  function cancelStockEdit() {
+    setEditingSku('');
+    setStockDraft('');
+  }
+
+  async function saveStockEdit(item) {
+    setError('');
+    const nextPhysicalStock = Number(stockDraft);
+
+    if (!Number.isInteger(nextPhysicalStock) || nextPhysicalStock < 0) {
+      setError('Ingresa una cantidad valida para el stock.');
+      return;
+    }
+
+    setSavingSku(item.sku);
+    try {
+      const updated = await client.updateInventoryStock({
+        sku: item.sku,
+        physicalStock: nextPhysicalStock
+      });
+
+      setRows((current) => current.map((row) => (row.sku === updated.sku ? updated : row)));
+      setEditingSku('');
+      setStockDraft('');
+    } catch (requestError) {
+      setError(requestError.response?.data?.message || 'No se pudo actualizar el stock.');
+    } finally {
+      setSavingSku('');
     }
   }
 
@@ -567,16 +613,18 @@ function InventoryTablePage({ client, title, subtitle, mode }) {
               <th>Stock Actual</th>
               <th>Estado</th>
               <th>Ubicacion</th>
+              <th>Acciones</th>
             </tr>
           </thead>
           <tbody>
             {loading ? (
               <tr>
-                <td colSpan="7"><div className="empty-state">Cargando productos...</div></td>
+                <td colSpan="8"><div className="empty-state">Cargando productos...</div></td>
               </tr>
             ) : null}
             {visibleRows.map((item) => {
               const status = item.stock.available === 0 ? 'Agotado' : item.stock.available < 20 ? 'Stock Bajo' : 'Disponible';
+              const isEditing = editingSku === item.sku;
               return (
                 <tr key={item.sku}>
                   <td><div className="product-icon"><Box size={21} /></div></td>
@@ -593,12 +641,30 @@ function InventoryTablePage({ client, title, subtitle, mode }) {
                   </td>
                   <td><span className={`status-badge ${status === 'Disponible' ? 'ok' : status === 'Agotado' ? 'danger' : 'warning'}`}>{status}</span></td>
                   <td>Santa Clara</td>
+                  <td>
+                    {isEditing ? (
+                      <div className="stock-edit">
+                        <input
+                          inputMode="numeric"
+                          value={stockDraft}
+                          onChange={(event) => setStockDraft(event.target.value)}
+                          aria-label={`Stock fisico para ${item.sku}`}
+                        />
+                        <button type="button" onClick={() => saveStockEdit(item)} disabled={savingSku === item.sku}>
+                          {savingSku === item.sku ? '...' : 'Guardar'}
+                        </button>
+                        <button type="button" className="ghost" onClick={cancelStockEdit}>Cancelar</button>
+                      </div>
+                    ) : (
+                      <button className="table-action" type="button" onClick={() => startStockEdit(item)}>Editar</button>
+                    )}
+                  </td>
                 </tr>
               );
             })}
             {!loading && visibleRows.length === 0 ? (
               <tr>
-                <td colSpan="7"><div className="empty-state">No hay productos registrados</div></td>
+                <td colSpan="8"><div className="empty-state">No hay productos registrados</div></td>
               </tr>
             ) : null}
           </tbody>
