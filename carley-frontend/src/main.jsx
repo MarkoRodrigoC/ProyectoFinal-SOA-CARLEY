@@ -6,7 +6,6 @@ import {
   BarChart3,
   Bell,
   Box,
-  CheckCircle2,
   ChevronRight,
   ClipboardList,
   Eye,
@@ -39,6 +38,41 @@ const STORE_OPTIONS = [
   { name: 'Vivanda', code: 'VIVANDA', customerId: 'STORE-VIVANDA' },
   { name: 'Wong', code: 'WONG', customerId: 'STORE-WONG' },
   { name: 'Makro', code: 'MAKRO', customerId: 'STORE-MAKRO' }
+];
+
+const TRUCKS = Array.from({ length: 50 }, (_, index) => `CAMION#${index + 1}`);
+
+const LIMA_DISTRICTS = [
+  'ATE',
+  'ANCON',
+  'BARRANCO',
+  'BREÑA',
+  'CARABAYLLO',
+  'CHACLACAYO',
+  'CHORRILLOS',
+  'CIENEGUILLA',
+  'COMAS',
+  'EL AGUSTINO',
+  'INDEPENDENCIA',
+  'JESUS MARIA',
+  'LA MOLINA',
+  'LA VICTORIA',
+  'LINCE',
+  'LOS OLIVOS',
+  'LURIGANCHO (CHOSICA)',
+  'LURIN',
+  'MAGDALENA DEL MAR',
+  'MIRAFLORES',
+  'PACHACAMAC',
+  'PUCUSANA',
+  'PUEBLO LIBRE',
+  'PUENTE PIEDRA',
+  'PUNTA HERMOSA',
+  'PUNTA NEGRA',
+  'RIMAC',
+  'SAN BARTOLO',
+  'SAN BORJA',
+  'SAN ISIDRO'
 ];
 
 const api = axios.create({
@@ -305,7 +339,7 @@ function AppShell({ token, identity, onLogout }) {
           {active === 'dashboard' && <DashboardPage client={client} />}
           {active === 'products' && <ProductsPage client={client} />}
           {active === 'orders' && <OrdersPage client={client} />}
-          {active === 'transport' && <TransportPage client={client} />}
+          {active === 'transport' && <TransportPlannerPage client={client} />}
           {active === 'billing' && <PlaceholderPage title="Facturacion" description="Modulo reservado para la integracion SUNAT de la Fase 6." icon={FileText} />}
           {active === 'reports' && <PlaceholderPage title="Reportes" description="Indicadores operativos consolidados para direccion logistica." icon={BarChart3} />}
           {active === 'settings' && <PlaceholderPage title="Configuracion" description="Parametros de operacion, roles y preferencias del sistema." icon={Settings} />}
@@ -876,6 +910,170 @@ function TransportPage({ client }) {
           <span><i className="dot green" /> Lima (Origen) · 25/05 12:00</span>
           <span><i className="dot blue" /> Ica (Checkpoint) · 25/05 15:30</span>
           <span><i className="dot red" /> Arequipa (Destino)</span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function TransportPlannerPage({ client }) {
+  const [orders, setOrders] = useState([]);
+  const [assignments, setAssignments] = useState(() => {
+    try {
+      return JSON.parse(localStorage.getItem('carley_transport_assignments') || '[]');
+    } catch (error) {
+      return [];
+    }
+  });
+  const [selectedOrderId, setSelectedOrderId] = useState('');
+  const [selectedTruck, setSelectedTruck] = useState('');
+  const [selectedDistrict, setSelectedDistrict] = useState('');
+  const [status, setStatus] = useState('');
+
+  useEffect(() => {
+    client.getOrders()
+      .then((result) => setOrders(result.orders || []))
+      .catch(() => setOrders([]));
+  }, [client]);
+
+  useEffect(() => {
+    localStorage.setItem('carley_transport_assignments', JSON.stringify(assignments));
+  }, [assignments]);
+
+  const assignedTruckSet = useMemo(() => new Set(assignments.map((assignment) => assignment.truck)), [assignments]);
+  const assignedOrderSet = useMemo(() => new Set(assignments.map((assignment) => assignment.orderId)), [assignments]);
+  const availableTrucks = useMemo(() => TRUCKS.filter((truck) => !assignedTruckSet.has(truck)), [assignedTruckSet]);
+  const availableOrders = useMemo(() => orders.filter((order) => !assignedOrderSet.has(order.orderId)), [assignedOrderSet, orders]);
+
+  function assignTruck() {
+    setStatus('');
+
+    const selectedOrderIndex = orders.findIndex((order) => order.orderId === selectedOrderId);
+    const selectedOrder = orders[selectedOrderIndex];
+
+    if (!selectedOrder) {
+      setStatus('Selecciona un pedido creado.');
+      return;
+    }
+
+    if (!selectedTruck) {
+      setStatus('Selecciona un camion disponible.');
+      return;
+    }
+
+    if (!selectedDistrict) {
+      setStatus('Selecciona el distrito destino.');
+      return;
+    }
+
+    const orderCode = formatOrderDisplayCode(selectedOrder, selectedOrderIndex, orders.length);
+    setAssignments((current) => [
+      {
+        id: `${selectedOrder.orderId}-${selectedTruck}`,
+        truck: selectedTruck,
+        orderId: selectedOrder.orderId,
+        orderCode,
+        district: selectedDistrict
+      },
+      ...current
+    ]);
+    setSelectedOrderId('');
+    setSelectedTruck('');
+    setSelectedDistrict('');
+    setStatus(`${orderCode} asignado a ${selectedTruck}.`);
+  }
+
+  return (
+    <div className="page-stack">
+      <PageHeading title="Transporte / Flota" subtitle="Asignacion manual de pedidos a camiones operativos" />
+
+      <section className="transport-grid">
+        <div className="metric-card panel">
+          <div className="metric-icon blue"><Truck size={24} /></div>
+          <span>Camiones Disponibles</span>
+          <strong>{availableTrucks.length}/50</strong>
+          <small>{assignments.length} camiones asignados</small>
+        </div>
+
+        <div className="metric-card panel">
+          <div className="metric-icon green"><ClipboardList size={24} /></div>
+          <span>Pedidos Pendientes</span>
+          <strong>{availableOrders.length}</strong>
+          <small>Pedidos creados sin camion</small>
+        </div>
+      </section>
+
+      <div className="transport-panel panel">
+        <PanelTitle icon={Truck} title="Asignar camion a pedido" />
+
+        <div className="assignment-form">
+          <label className="select-shell">
+            Pedido creado
+            <select value={selectedOrderId} onChange={(event) => setSelectedOrderId(event.target.value)}>
+              <option value="">Selecciona un pedido</option>
+              {availableOrders.map((order) => {
+                const orderIndex = orders.findIndex((candidate) => candidate.orderId === order.orderId);
+                return (
+                  <option key={order.orderId} value={order.orderId}>
+                    {formatOrderDisplayCode(order, orderIndex, orders.length)} - {order.customer?.name}
+                  </option>
+                );
+              })}
+            </select>
+          </label>
+
+          <label className="select-shell">
+            Camion disponible
+            <select value={selectedTruck} onChange={(event) => setSelectedTruck(event.target.value)}>
+              <option value="">Selecciona un camion</option>
+              {availableTrucks.map((truck) => (
+                <option key={truck} value={truck}>{truck}</option>
+              ))}
+            </select>
+          </label>
+
+          <label className="select-shell">
+            Distrito a enviar
+            <select value={selectedDistrict} onChange={(event) => setSelectedDistrict(event.target.value)}>
+              <option value="">Selecciona distrito</option>
+              {LIMA_DISTRICTS.map((district) => (
+                <option key={district} value={district}>{district}</option>
+              ))}
+            </select>
+          </label>
+
+          <button className="primary-button" type="button" onClick={assignTruck}>Asignar camion</button>
+        </div>
+
+        {status ? <div className="inline-status">{status}</div> : null}
+      </div>
+
+      <div className="panel">
+        <PanelTitle icon={ClipboardList} title="Asignaciones de Transporte" />
+        <div className="assignment-table">
+          <table>
+            <thead>
+              <tr>
+                <th>CAMION</th>
+                <th>PEDIDO</th>
+                <th>DISTRITO</th>
+              </tr>
+            </thead>
+            <tbody>
+              {assignments.map((assignment) => (
+                <tr key={assignment.id}>
+                  <td>{assignment.truck}</td>
+                  <td>{assignment.orderCode}</td>
+                  <td>{assignment.district}</td>
+                </tr>
+              ))}
+              {assignments.length === 0 ? (
+                <tr>
+                  <td colSpan="3"><div className="empty-state compact">Aun no hay camiones asignados</div></td>
+                </tr>
+              ) : null}
+            </tbody>
+          </table>
         </div>
       </div>
     </div>

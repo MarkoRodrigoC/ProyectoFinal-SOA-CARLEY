@@ -1287,6 +1287,51 @@ td {
   gap: 24px;
 }
 
+.transport-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+}
+
+.assignment-form {
+  display: grid;
+  grid-template-columns: minmax(220px, 1fr) minmax(190px, 0.8fr) minmax(230px, 1fr) auto;
+  align-items: end;
+  gap: 16px;
+}
+
+.assignment-form .select-shell {
+  min-width: 0;
+  margin: 0;
+}
+
+.assignment-form .primary-button {
+  width: auto;
+  min-width: 170px;
+  padding: 0 18px;
+}
+
+.assignment-table {
+  overflow: auto;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+}
+
+.assignment-table table {
+  min-width: 720px;
+  background: #fff;
+}
+
+.assignment-table th {
+  color: #506784;
+  font-size: 12px;
+  letter-spacing: 0;
+}
+
+.assignment-table td {
+  font-weight: 800;
+}
+
 .route-summary {
   justify-content: space-between;
 }
@@ -1398,6 +1443,15 @@ td {
   .metric-grid,
   .timeline {
     grid-template-columns: repeat(2, 1fr);
+  }
+
+  .transport-grid,
+  .assignment-form {
+    grid-template-columns: 1fr;
+  }
+
+  .assignment-form .primary-button {
+    width: 100%;
   }
 
   .topbar,
