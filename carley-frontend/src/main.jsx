@@ -32,6 +32,15 @@ import './styles.css';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
 
+const STORE_OPTIONS = [
+  { name: 'PlazaVea', code: 'VEA', customerId: 'STORE-PLAZAVEA' },
+  { name: 'Tottus', code: 'TOTTUS', customerId: 'STORE-TOTTUS' },
+  { name: 'La tiendita de Don Pepe', code: 'DONPEPE', customerId: 'STORE-DONPEPE' },
+  { name: 'Vivanda', code: 'VIVANDA', customerId: 'STORE-VIVANDA' },
+  { name: 'Wong', code: 'WONG', customerId: 'STORE-WONG' },
+  { name: 'Makro', code: 'MAKRO', customerId: 'STORE-MAKRO' }
+];
+
 const api = axios.create({
   baseURL: API_BASE_URL,
   timeout: 8000
@@ -572,6 +581,7 @@ function OrdersPage({ client }) {
   const [quantity, setQuantity] = useState('');
   const [pendingItems, setPendingItems] = useState([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
+  const [selectedStoreName, setSelectedStoreName] = useState('');
 
   async function refreshOrders() {
     const result = await client.getOrders();
@@ -585,20 +595,28 @@ function OrdersPage({ client }) {
       return;
     }
 
+    const selectedStore = STORE_OPTIONS.find((store) => store.name === selectedStoreName);
+    if (!selectedStore) {
+      setStatus('Selecciona la tienda a enviar antes de registrar el pedido.');
+      return;
+    }
+
+    const nextOrderNumber = orders.length + 1;
+
     try {
       const result = await client.registerOrder({
         customer: {
-          customerId: 'CLI-1001',
-          name: 'Cliente Industrial Santa Clara',
+          customerId: selectedStore.customerId,
+          name: selectedStore.name,
           documentNumber: '20600111222'
         },
         order: {
-          externalReference: `OC-${Date.now()}`,
+          externalReference: `${selectedStore.code}#${nextOrderNumber}`,
           currency: 'PEN'
         },
         items: pendingItems.map((item) => ({ sku: item.sku, quantity: item.quantity }))
       });
-      setStatus(`Pedido registrado: ${result.orderId}`);
+      setStatus(`Pedido registrado: ${selectedStore.code}#${nextOrderNumber}`);
       setPendingItems([]);
       setSku('');
       setQuantity('');
@@ -702,6 +720,15 @@ function OrdersPage({ client }) {
       <section className="split-grid">
         <div className="panel">
           <PanelTitle icon={ClipboardList} title="Nuevo Pedido" />
+          <label className="select-shell store-select">
+            Tienda a Enviar
+            <select value={selectedStoreName} onChange={(event) => setSelectedStoreName(event.target.value)}>
+              <option value="">Selecciona una tienda</option>
+              {STORE_OPTIONS.map((store) => (
+                <option key={store.code} value={store.name}>{store.name}</option>
+              ))}
+            </select>
+          </label>
           <label>
             SKU
             <div className="autocomplete-shell">
@@ -771,10 +798,10 @@ function OrdersPage({ client }) {
         <div className="panel">
           <PanelTitle icon={Package} title="Pedidos Creados" />
           <div className="order-list">
-            {orders.slice(0, 6).map((order) => (
+            {orders.slice(0, 6).map((order, index) => (
               <div className="order-row" key={order.orderId}>
                 <div>
-                  <strong>{order.orderId.slice(0, 8)}</strong>
+                  <strong>{formatOrderDisplayCode(order, index, orders.length)}</strong>
                   <span>{order.customer?.name}</span>
                 </div>
                 <span className="status-badge ok">{order.status}</span>
@@ -926,6 +953,20 @@ function inferCategory(name) {
   if (['detergente', 'lejia', 'lavavajilla', 'papel', 'toalla', 'bolsas'].some((keyword) => value.includes(keyword))) return 'Limpieza';
   if (['jabon', 'shampoo', 'pasta dental', 'cepillo', 'panal', 'toallas humedas', 'alcohol', 'mascarillas'].some((keyword) => value.includes(keyword))) return 'Cuidado Personal';
   return 'Supermercado';
+}
+
+function getStoreCode(storeName = '') {
+  const store = STORE_OPTIONS.find((option) => option.name.toLowerCase() === storeName.toLowerCase());
+  return store?.code || 'PED';
+}
+
+function formatOrderDisplayCode(order, index, totalOrders) {
+  const reference = order.order?.externalReference;
+  if (reference && reference.includes('#')) {
+    return reference;
+  }
+
+  return `${getStoreCode(order.customer?.name)}#${Math.max(totalOrders - index, 1)}`;
 }
 
 function Root() {

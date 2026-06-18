@@ -484,6 +484,11 @@ label {
   font-weight: 700;
 }
 
+.store-select {
+  width: 100%;
+  margin-bottom: 18px;
+}
+
 .login-row,
 .top-actions,
 .toolbar-panel,
