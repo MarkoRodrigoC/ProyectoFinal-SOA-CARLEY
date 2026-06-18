@@ -742,9 +742,20 @@ label {
 .user-chip {
   display: flex;
   gap: 8px;
-  padding: 0 12px;
+  padding: 0 12px 0 6px;
   font-size: 12px;
   font-weight: 800;
+}
+
+.user-chip img {
+  width: 28px;
+  height: 28px;
+  border-radius: 999px;
+  object-fit: cover;
+}
+
+.user-chip span {
+  white-space: nowrap;
 }
 
 .page-content {

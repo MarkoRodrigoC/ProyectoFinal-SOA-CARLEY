@@ -24,10 +24,10 @@ import {
   Shield,
   ShoppingCart,
   Truck,
-  UserRound,
   Warehouse
 } from 'lucide-react';
 import carleyLogo from './assets/carley-logo.png';
+import pepeGrilloAvatar from './assets/pepe-grillo.png';
 import './styles.css';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
@@ -292,8 +292,8 @@ function AppShell({ token, identity, onLogout }) {
               <span>3</span>
             </button>
             <button className="user-chip" type="button">
-              <UserRound size={18} />
-              {identity?.role || 'ADMINISTRADOR'}
+              <img src={pepeGrilloAvatar} alt="Pepe Grillo" />
+              <span>Bienvenido PEPE GRILLO</span>
             </button>
             <button className="icon-button" onClick={onLogout} aria-label="Cerrar sesion">
               <LogOut size={20} />
