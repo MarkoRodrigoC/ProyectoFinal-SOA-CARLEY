@@ -236,8 +236,7 @@ function LoginPage({ onLogin }) {
 
 const navigation = [
   { id: 'dashboard', label: 'Inicio', icon: Home },
-  { id: 'products', label: 'Catalogo de Productos', icon: Box },
-  { id: 'inventory', label: 'Inventario', icon: Warehouse },
+  { id: 'products', label: 'Inventario', icon: Warehouse },
   { id: 'orders', label: 'Pedidos', icon: ShoppingCart },
   { id: 'transport', label: 'Transporte / Flota', icon: Truck },
   { id: 'billing', label: 'Facturacion', icon: FileText },
@@ -305,7 +304,6 @@ function AppShell({ token, identity, onLogout }) {
         <main className="page-content">
           {active === 'dashboard' && <DashboardPage client={client} />}
           {active === 'products' && <ProductsPage client={client} />}
-          {active === 'inventory' && <InventoryPage client={client} />}
           {active === 'orders' && <OrdersPage client={client} />}
           {active === 'transport' && <TransportPage client={client} />}
           {active === 'billing' && <PlaceholderPage title="Facturacion" description="Modulo reservado para la integracion SUNAT de la Fase 6." icon={FileText} />}
@@ -402,20 +400,9 @@ function ProductsPage({ client }) {
   return (
     <InventoryTablePage
       client={client}
-      title="Catalogo de Productos"
-      subtitle="Consulta productos sincronizados con el inventario logistico"
-      mode="products"
-    />
-  );
-}
-
-function InventoryPage({ client }) {
-  return (
-    <InventoryTablePage
-      client={client}
       title="Inventario"
-      subtitle="Stock fisico y disponible de la sede Santa Clara"
-      mode="inventory"
+      subtitle="Consulta productos sincronizados con el stock logistico"
+      mode="products"
     />
   );
 }
