@@ -342,7 +342,7 @@ function AppShell({ token, identity, onLogout }) {
           {active === 'transport' && <TransportPlannerPage client={client} />}
           {active === 'billing' && <PlaceholderPage title="Facturacion" description="Modulo reservado para la integracion SUNAT de la Fase 6." icon={FileText} />}
           {active === 'reports' && <PlaceholderPage title="Reportes" description="Indicadores operativos consolidados para direccion logistica." icon={BarChart3} />}
-          {active === 'settings' && <PlaceholderPage title="Configuracion" description="Parametros de operacion, roles y preferencias del sistema." icon={Settings} />}
+          {active === 'settings' && <SettingsPage />}
         </main>
       </section>
     </div>
@@ -1083,6 +1083,62 @@ function PlaceholderPage({ title, description, icon: Icon }) {
       <Icon size={38} />
       <h2>{title}</h2>
       <p>{description}</p>
+    </div>
+  );
+}
+
+function SettingsPage() {
+  const companyRows = [
+    { label: 'Razon Social', value: 'Grupo Carley S.A.C.' },
+    { label: 'Correo electronico', value: 'operaciones@carley.local' },
+    { label: 'Celular corporativo', value: '+51 927 442 969' },
+    { label: 'Direccion', value: 'Sede Logistica Santa Clara, Ate, Lima' },
+    { label: 'Responsable tecnico', value: 'Frank Alexzander Paraguay' },
+    { label: 'Administrador del sistema', value: 'PEPE GRILLO' }
+  ];
+
+  const operationRows = [
+    { label: 'Base de datos inventario', value: 'PostgreSQL carley_inventario' },
+    { label: 'Base de datos pedidos', value: 'PostgreSQL carley_pedidos' },
+    { label: 'Broker de mensajeria', value: 'RabbitMQ local' },
+    { label: 'API Gateway', value: 'Puerto 8000' }
+  ];
+
+  return (
+    <div className="page-stack">
+      <PageHeading title="Configuracion" subtitle="Datos corporativos y parametros operativos del ecosistema CARLEY" />
+
+      <section className="settings-grid">
+        <div className="settings-card panel">
+          <PanelTitle icon={Settings} title="Datos de la Empresa" />
+          <div className="settings-list">
+            {companyRows.map((row) => (
+              <div className="settings-row" key={row.label}>
+                <div>
+                  <strong>{row.label}</strong>
+                  <span>{row.value}</span>
+                </div>
+                <button type="button">Editar</button>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="settings-card panel">
+          <PanelTitle icon={Shield} title="Configuracion Tecnica" />
+          <div className="settings-list">
+            {operationRows.map((row) => (
+              <div className="settings-row" key={row.label}>
+                <div>
+                  <strong>{row.label}</strong>
+                  <span>{row.value}</span>
+                </div>
+                <button type="button">Ver</button>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
     </div>
   );
 }
