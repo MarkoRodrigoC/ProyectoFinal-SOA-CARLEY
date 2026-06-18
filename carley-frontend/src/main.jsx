@@ -13,7 +13,6 @@ import {
   Home,
   LifeBuoy,
   Lock,
-  LogOut,
   Mail,
   MapPin,
   Package,
@@ -285,6 +284,7 @@ const navigation = [
 
 function AppShell({ token, identity, onLogout }) {
   const [active, setActive] = useState('dashboard');
+  const [profileOpen, setProfileOpen] = useState(false);
   const client = useApi(token);
 
   return (
@@ -330,13 +330,20 @@ function AppShell({ token, identity, onLogout }) {
               <Bell size={20} />
               <span>3</span>
             </button>
-            <button className="user-chip" type="button">
-              <img src={pepeGrilloAvatar} alt="Pepe Grillo" />
-              <span>Bienvenido PEPE GRILLO</span>
-            </button>
-            <button className="icon-button" onClick={onLogout} aria-label="Cerrar sesion">
-              <LogOut size={20} />
-            </button>
+            <div className="profile-menu">
+              <button className="user-chip" type="button" onClick={() => setProfileOpen((current) => !current)}>
+                <img src={pepeGrilloAvatar} alt="Pepe Grillo" />
+                <span>Bienvenido PEPE GRILLO</span>
+              </button>
+              {profileOpen ? (
+                <div className="profile-card">
+                  <img src={pepeGrilloAvatar} alt="Pepe Grillo" />
+                  <strong>PEPE GRILLO</strong>
+                  <span>Administrador del sistema</span>
+                  <button type="button" onClick={onLogout}>Salir</button>
+                </div>
+              ) : null}
+            </div>
           </div>
         </header>
 
@@ -1210,7 +1217,6 @@ function SettingsPage() {
                   <strong>{row.label}</strong>
                   <span>{row.value}</span>
                 </div>
-                <button type="button">Editar</button>
               </div>
             ))}
           </div>
@@ -1225,7 +1231,6 @@ function SettingsPage() {
                   <strong>{row.label}</strong>
                   <span>{row.value}</span>
                 </div>
-                <button type="button">Ver</button>
               </div>
             ))}
           </div>
