@@ -352,6 +352,7 @@ function AppShell({ token, identity, onLogout }) {
 function DashboardPage({ client }) {
   const [orders, setOrders] = useState([]);
   const [products, setProducts] = useState([]);
+  const [transportAssignments, setTransportAssignments] = useState(() => readTransportAssignments());
 
   useEffect(() => {
     Promise.allSettled([client.getOrders(), client.getInventoryList()]).then(([ordersResult, inventoryResult]) => {
@@ -362,10 +363,12 @@ function DashboardPage({ client }) {
         setProducts(inventoryResult.value.products || []);
       }
     });
+    setTransportAssignments(readTransportAssignments());
   }, [client]);
 
   const lowStock = products.filter((product) => product.stock.available > 0 && product.stock.available < 20).length;
   const criticalStock = products.filter((product) => product.stock.available === 0).length;
+  const availableTruckCount = Math.max(TRUCKS.length - transportAssignments.length, 0);
   const activeInventoryPercent = products.length
     ? Math.round((products.filter((item) => item.stock.available > 0).length / products.length) * 100)
     : 0;
@@ -387,7 +390,7 @@ function DashboardPage({ client }) {
       <section className="metric-grid">
         <MetricCard label="Pedidos Registrados" value={orders.length} helper="Persistidos en PostgreSQL" tone="blue" icon={ClipboardList} />
         <MetricCard label="Productos Catalogados" value={products.length || '--'} helper="Sede Santa Clara" tone="green" icon={Package} />
-        <MetricCard label="Camiones Disponibles" value="50" helper="Flota operativa nacional" tone="orange" icon={Truck} />
+        <MetricCard label="Camiones Disponibles" value={`${availableTruckCount}/50`} helper={`${transportAssignments.length} camiones asignados`} tone="orange" icon={Truck} />
         <MetricCard label="Alertas de Stock" value={lowStock + criticalStock} helper={`${criticalStock} agotados`} tone="red" icon={AlertTriangle} />
       </section>
 
@@ -918,13 +921,7 @@ function TransportPage({ client }) {
 
 function TransportPlannerPage({ client }) {
   const [orders, setOrders] = useState([]);
-  const [assignments, setAssignments] = useState(() => {
-    try {
-      return JSON.parse(localStorage.getItem('carley_transport_assignments') || '[]');
-    } catch (error) {
-      return [];
-    }
-  });
+  const [assignments, setAssignments] = useState(() => readTransportAssignments());
   const [selectedOrderId, setSelectedOrderId] = useState('');
   const [selectedTruck, setSelectedTruck] = useState('');
   const [selectedDistrict, setSelectedDistrict] = useState('');
@@ -1152,6 +1149,14 @@ function formatOrderDisplayCode(order, index, totalOrders) {
   }
 
   return `${getStoreCode(order.customer?.name)}#${Math.max(totalOrders - index, 1)}`;
+}
+
+function readTransportAssignments() {
+  try {
+    return JSON.parse(localStorage.getItem('carley_transport_assignments') || '[]');
+  } catch (error) {
+    return [];
+  }
 }
 
 function Root() {
