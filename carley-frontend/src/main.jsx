@@ -571,6 +571,7 @@ function OrdersPage({ client }) {
   const [sku, setSku] = useState('');
   const [quantity, setQuantity] = useState('');
   const [pendingItems, setPendingItems] = useState([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
 
   async function refreshOrders() {
     const result = await client.getOrders();
@@ -670,7 +671,7 @@ function OrdersPage({ client }) {
 
   const skuSuggestions = useMemo(() => {
     const query = sku.trim().toLowerCase();
-    if (query.length === 0) {
+    if (!showSuggestions || query.length === 0) {
       return [];
     }
 
@@ -681,11 +682,17 @@ function OrdersPage({ client }) {
         || product.productName.toLowerCase().includes(` ${query}`)
       ))
       .slice(0, 6);
-  }, [products, sku]);
+  }, [products, showSuggestions, sku]);
 
   function selectSuggestion(product) {
     setSku(product.sku);
+    setShowSuggestions(false);
     setStatus('');
+  }
+
+  function updateSkuInput(value) {
+    setSku(value);
+    setShowSuggestions(true);
   }
 
   return (
@@ -700,7 +707,7 @@ function OrdersPage({ client }) {
             <div className="autocomplete-shell">
               <div className="input-shell">
                 <Package size={18} />
-                <input value={sku} onChange={(event) => setSku(event.target.value)} placeholder="Ej. ARROZ001 o leche" />
+                <input value={sku} onChange={(event) => updateSkuInput(event.target.value)} placeholder="Ej. ARROZ001 o leche" />
               </div>
               {skuSuggestions.length > 0 ? (
                 <div className="suggestion-list">
