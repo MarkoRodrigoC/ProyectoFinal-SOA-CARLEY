@@ -55,16 +55,16 @@ class InventoryService {
     };
   }
 
-  async updateStockQuantity(sku, physicalStock) {
+  async addStockQuantity(sku, quantity) {
     if (!sku || !SKU_PATTERN.test(sku)) {
       throw new HttpError(400, 'Bad Request', 'SKU must be alphanumeric and between 3 and 32 characters');
     }
 
-    if (!Number.isInteger(physicalStock) || physicalStock < 0) {
-      throw new HttpError(400, 'Bad Request', 'Physical stock must be a positive integer or zero');
+    if (!Number.isInteger(quantity) || quantity <= 0) {
+      throw new HttpError(400, 'Bad Request', 'Quantity to add must be a positive integer');
     }
 
-    const stock = await this.inventoryRepository.updateSantaClaraPhysicalStock(sku, physicalStock);
+    const stock = await this.inventoryRepository.addSantaClaraStock(sku, quantity);
     return this.toDto(stock);
   }
 

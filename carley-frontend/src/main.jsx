@@ -3,7 +3,6 @@ import { createRoot } from 'react-dom/client';
 import axios from 'axios';
 import {
   AlertTriangle,
-  Bell,
   Box,
   ChevronRight,
   ClipboardList,
@@ -72,6 +71,8 @@ const LIMA_DISTRICTS = [
   'SAN BORJA',
   'SAN ISIDRO'
 ];
+
+const TRANSPORT_STATUS_OPTIONS = ['En ruta', 'Entrega pendiente'];
 
 const api = axios.create({
   baseURL: API_BASE_URL,
@@ -332,10 +333,6 @@ function AppShell({ token, identity, onLogout }) {
       <section className="content-shell">
         <header className="topbar">
           <div className="top-actions">
-            <button className="icon-button notification" aria-label="Notificaciones">
-              <Bell size={20} />
-              <span>3</span>
-            </button>
             <div className="profile-menu">
               <button className="user-chip" type="button" onClick={() => setProfileOpen((current) => !current)}>
                 <img src={pepeGrilloAvatar} alt="Pepe Grillo" />
@@ -413,8 +410,19 @@ function DashboardPage({ client }) {
 
       <section className="dashboard-grid">
         <div className="panel map-panel">
-          <PanelTitle icon={MapPin} title="Cobertura de Distribucion" />
-          <div className="map-canvas">
+          <PanelTitle icon={MapPin} title="Ubicacion del Local" />
+          <div className="location-map">
+            <iframe
+              title="Mapa sede logistica Santa Clara"
+              src="https://www.openstreetmap.org/export/embed.html?bbox=-76.918%2C-12.023%2C-76.871%2C-11.988&layer=mapnik&marker=-12.0055%2C-76.8950"
+              loading="lazy"
+              referrerPolicy="no-referrer-when-downgrade"
+            />
+            <div className="location-card">
+              <span>Sede principal</span>
+              <strong>CARLEY Santa Clara</strong>
+              <small>Ate, Lima - Centro logistico operativo</small>
+            </div>
             <div className="route-info-card">
               <span>Ruta activa</span>
               <strong>Lima - Ica - Arequipa</strong>
@@ -510,7 +518,7 @@ function InventoryTablePage({ client, title, subtitle, mode }) {
 
   function startStockEdit(item) {
     setEditingSku(item.sku);
-    setStockDraft(String(item.stock.physical));
+    setStockDraft('');
     setError('');
   }
 
@@ -521,10 +529,10 @@ function InventoryTablePage({ client, title, subtitle, mode }) {
 
   async function saveStockEdit(item) {
     setError('');
-    const nextPhysicalStock = Number(stockDraft);
+    const quantityToAdd = Number(stockDraft);
 
-    if (!Number.isInteger(nextPhysicalStock) || nextPhysicalStock < 0) {
-      setError('Ingresa una cantidad valida para el stock.');
+    if (!Number.isInteger(quantityToAdd) || quantityToAdd <= 0) {
+      setError('Ingresa una cantidad a agregar mayor a cero.');
       return;
     }
 
@@ -532,7 +540,7 @@ function InventoryTablePage({ client, title, subtitle, mode }) {
     try {
       const updated = await client.updateInventoryStock({
         sku: item.sku,
-        physicalStock: nextPhysicalStock
+        quantity: quantityToAdd
       });
 
       setRows((current) => current.map((row) => (row.sku === updated.sku ? updated : row)));
@@ -648,10 +656,11 @@ function InventoryTablePage({ client, title, subtitle, mode }) {
                           inputMode="numeric"
                           value={stockDraft}
                           onChange={(event) => setStockDraft(event.target.value)}
-                          aria-label={`Stock fisico para ${item.sku}`}
+                          placeholder="+ unidades"
+                          aria-label={`Cantidad a agregar para ${item.sku}`}
                         />
                         <button type="button" onClick={() => saveStockEdit(item)} disabled={savingSku === item.sku}>
-                          {savingSku === item.sku ? '...' : 'Guardar'}
+                          {savingSku === item.sku ? '...' : 'Agregar'}
                         </button>
                         <button type="button" className="ghost" onClick={cancelStockEdit}>Cancelar</button>
                       </div>
@@ -1003,6 +1012,8 @@ function TransportPlannerPage({ client }) {
   const [selectedTruck, setSelectedTruck] = useState('');
   const [selectedDistrict, setSelectedDistrict] = useState('');
   const [status, setStatus] = useState('');
+  const [trackingAssignment, setTrackingAssignment] = useState(null);
+  const [trackingStatus, setTrackingStatus] = useState('En ruta');
 
   useEffect(() => {
     client.getOrders()
@@ -1047,7 +1058,8 @@ function TransportPlannerPage({ client }) {
         truck: selectedTruck,
         orderId: selectedOrder.orderId,
         orderCode,
-        district: selectedDistrict
+        district: selectedDistrict,
+        status: 'Asignado'
       },
       ...current
     ]);
@@ -1055,6 +1067,28 @@ function TransportPlannerPage({ client }) {
     setSelectedTruck('');
     setSelectedDistrict('');
     setStatus(`${orderCode} asignado a ${selectedTruck}.`);
+  }
+
+  function openTracking(assignment) {
+    setTrackingAssignment(assignment);
+    setTrackingStatus(assignment.status === 'Entrega pendiente' ? 'Entrega pendiente' : 'En ruta');
+  }
+
+  function updateTrackingStatus() {
+    if (!trackingAssignment) {
+      return;
+    }
+
+    const updatedAssignment = {
+      ...trackingAssignment,
+      status: trackingStatus
+    };
+
+    setAssignments((current) => current.map((assignment) => (
+      assignment.id === updatedAssignment.id ? updatedAssignment : assignment
+    )));
+    setTrackingAssignment(updatedAssignment);
+    setStatus(`${updatedAssignment.orderCode} actualizado a ${trackingStatus}.`);
   }
 
   return (
@@ -1131,6 +1165,8 @@ function TransportPlannerPage({ client }) {
                 <th>CAMION</th>
                 <th>PEDIDO</th>
                 <th>DISTRITO</th>
+                <th>ESTATUS</th>
+                <th>SEGUIMIENTO</th>
               </tr>
             </thead>
             <tbody>
@@ -1139,17 +1175,82 @@ function TransportPlannerPage({ client }) {
                   <td>{assignment.truck}</td>
                   <td>{assignment.orderCode}</td>
                   <td>{assignment.district}</td>
+                  <td><span className={`status-badge ${getTransportStatusTone(assignment.status)}`}>{assignment.status || 'Asignado'}</span></td>
+                  <td>
+                    <button
+                      className="table-action"
+                      type="button"
+                      onClick={() => openTracking(assignment)}
+                    >
+                      Seguimiento
+                    </button>
+                  </td>
                 </tr>
               ))}
               {assignments.length === 0 ? (
                 <tr>
-                  <td colSpan="3"><div className="empty-state compact">Aun no hay camiones asignados</div></td>
+                  <td colSpan="5"><div className="empty-state compact">Aun no hay camiones asignados</div></td>
                 </tr>
               ) : null}
             </tbody>
           </table>
         </div>
       </div>
+
+      {trackingAssignment ? (
+        <div className="modal-backdrop" role="presentation" onClick={() => setTrackingAssignment(null)}>
+          <div className="tracking-modal" role="dialog" aria-modal="true" aria-label="Seguimiento de transporte" onClick={(event) => event.stopPropagation()}>
+            <div className="tracking-header">
+              <div>
+                <span>Seguimiento de Transporte</span>
+                <strong>{trackingAssignment.orderCode}</strong>
+              </div>
+              <button className="modal-close" type="button" aria-label="Cerrar seguimiento" onClick={() => setTrackingAssignment(null)}>x</button>
+            </div>
+
+            <div className="tracking-summary">
+              <div>
+                <span>Camion asignado</span>
+                <strong>{trackingAssignment.truck}</strong>
+              </div>
+              <div>
+                <span>Distrito destino</span>
+                <strong>{trackingAssignment.district}</strong>
+              </div>
+              <div>
+                <span>Estatus actual</span>
+                <strong>{trackingAssignment.status || 'Asignado'}</strong>
+              </div>
+            </div>
+
+            <div className="tracking-steps">
+              {['Pedido validado', 'Camion asignado', 'En ruta', 'Entrega pendiente'].map((step, index) => (
+                <div className={`tracking-step ${index <= getTransportStepIndex(trackingAssignment.status) ? 'done' : ''}`} key={step}>
+                  <span>{index <= getTransportStepIndex(trackingAssignment.status) ? 'OK' : ''}</span>
+                  <strong>{step}</strong>
+                  <small>{index <= getTransportStepIndex(trackingAssignment.status) ? 'Completado' : 'Pendiente'}</small>
+                </div>
+              ))}
+            </div>
+
+            <div className="tracking-update">
+              <label className="select-shell">
+                Actualizar estado
+                <select value={trackingStatus} onChange={(event) => setTrackingStatus(event.target.value)}>
+                  {TRANSPORT_STATUS_OPTIONS.map((option) => (
+                    <option key={option} value={option}>{option}</option>
+                  ))}
+                </select>
+              </label>
+              <button className="primary-button" type="button" onClick={updateTrackingStatus}>Actualizar estado</button>
+            </div>
+
+            <div className="tracking-note">
+              Ruta programada desde Santa Clara hacia {trackingAssignment.district}. La unidad queda lista para iniciar recorrido.
+            </div>
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }
@@ -1157,10 +1258,13 @@ function TransportPlannerPage({ client }) {
 function BillingPage({ client }) {
   const [orders, setOrders] = useState([]);
   const [products, setProducts] = useState([]);
+  const [assignments, setAssignments] = useState([]);
   const [status, setStatus] = useState('');
   const [loadingOrderId, setLoadingOrderId] = useState('');
 
   useEffect(() => {
+    setAssignments(readTransportAssignments());
+
     Promise.allSettled([client.getOrders(), client.getInventoryList()]).then(([ordersResult, inventoryResult]) => {
       if (ordersResult.status === 'fulfilled') {
         setOrders(ordersResult.value.orders || []);
@@ -1179,12 +1283,35 @@ function BillingPage({ client }) {
     }, {})
   ), [products]);
 
-  async function openInvoice(order, index) {
+  const assignedOrders = useMemo(() => (
+    assignments
+      .map((assignment) => {
+        const orderIndex = orders.findIndex((order) => order.orderId === assignment.orderId);
+        if (orderIndex === -1) {
+          return null;
+        }
+
+        return {
+          assignment,
+          order: orders[orderIndex],
+          orderIndex
+        };
+      })
+      .filter(Boolean)
+  ), [assignments, orders]);
+
+  async function openInvoice(assignedOrder) {
     setStatus('');
-    setLoadingOrderId(order.orderId);
+    setLoadingOrderId(assignedOrder.assignment.id);
 
     try {
-      const payload = buildInvoicePayload(order, index, orders.length, productBySku);
+      const payload = buildInvoicePayload(
+        assignedOrder.order,
+        assignedOrder.orderIndex,
+        orders.length,
+        productBySku,
+        assignedOrder.assignment
+      );
       const pdfWindow = window.open('', '_blank', 'noopener,noreferrer');
       const pdfBlob = await client.generateInvoice(payload);
       const url = URL.createObjectURL(pdfBlob);
@@ -1207,34 +1334,36 @@ function BillingPage({ client }) {
 
   return (
     <div className="page-stack">
-      <PageHeading title="Facturacion" subtitle="Comprobantes PDF generados desde los pedidos registrados" />
+      <PageHeading title="Facturacion" subtitle="Comprobantes PDF generados luego de asignar camion y distrito" />
 
       <div className="panel">
-        <PanelTitle icon={FileText} title="Comprobantes PDF" />
+        <PanelTitle icon={FileText} title="Comprobantes PDF listos para emitir" />
         <div className="billing-list">
-          {orders.map((order, index) => {
-            const invoiceCode = formatOrderDisplayCode(order, index, orders.length);
+          {assignedOrders.map((assignedOrder) => {
+            const invoiceCode = assignedOrder.assignment.orderCode || formatOrderDisplayCode(assignedOrder.order, assignedOrder.orderIndex, orders.length);
             return (
-              <div className="billing-row" key={order.orderId}>
+              <div className="billing-row" key={assignedOrder.assignment.id}>
                 <div className="billing-doc-icon">
                   <FileText size={22} />
                 </div>
                 <div>
                   <strong>{invoiceCode}.pdf</strong>
-                  <span>{order.customer?.name} - {order.items?.length || 0} producto(s)</span>
+                  <span>
+                    {assignedOrder.order.customer?.name} - {assignedOrder.assignment.truck} - {assignedOrder.assignment.district}
+                  </span>
                 </div>
                 <button
                   className="secondary-button"
                   type="button"
-                  onClick={() => openInvoice(order, index)}
-                  disabled={loadingOrderId === order.orderId}
+                  onClick={() => openInvoice(assignedOrder)}
+                  disabled={loadingOrderId === assignedOrder.assignment.id}
                 >
-                  {loadingOrderId === order.orderId ? 'Generando...' : 'Ver PDF'}
+                  {loadingOrderId === assignedOrder.assignment.id ? 'Generando...' : 'Ver PDF'}
                 </button>
               </div>
             );
           })}
-          {orders.length === 0 ? <div className="empty-state">Aun no hay pedidos para facturar</div> : null}
+          {assignedOrders.length === 0 ? <div className="empty-state">Asigna un pedido a un camion para generar su PDF</div> : null}
         </div>
         {status ? <div className="inline-status">{status}</div> : null}
       </div>
@@ -1370,8 +1499,8 @@ function formatOrderDisplayCode(order, index, totalOrders) {
   return `${getStoreCode(order.customer?.name)}#${Math.max(totalOrders - index, 1)}`;
 }
 
-function buildInvoicePayload(order, index, totalOrders, productBySku) {
-  const orderCode = formatOrderDisplayCode(order, index, totalOrders);
+function buildInvoicePayload(order, index, totalOrders, productBySku, assignment = null) {
+  const orderCode = assignment?.orderCode || formatOrderDisplayCode(order, index, totalOrders);
   const items = (order.items || []).map((item) => {
     const product = productBySku[item.sku];
     const productName = product?.productName || item.productName || item.sku;
@@ -1387,6 +1516,8 @@ function buildInvoicePayload(order, index, totalOrders, productBySku) {
     orderId: orderCode,
     cliente: order.customer?.name || 'Cliente CARLEY',
     fecha: new Date().toISOString().slice(0, 10),
+    camion: assignment?.truck || 'Pendiente',
+    distrito: assignment?.district || 'Pendiente',
     items
   };
 }
@@ -1413,6 +1544,30 @@ function readTransportAssignments() {
   } catch (error) {
     return [];
   }
+}
+
+function getTransportStatusTone(status = 'Asignado') {
+  if (status === 'En ruta') {
+    return 'warning';
+  }
+
+  if (status === 'Entrega pendiente') {
+    return 'danger';
+  }
+
+  return 'ok';
+}
+
+function getTransportStepIndex(status = 'Asignado') {
+  if (status === 'En ruta') {
+    return 2;
+  }
+
+  if (status === 'Entrega pendiente') {
+    return 3;
+  }
+
+  return 1;
 }
 
 function Root() {

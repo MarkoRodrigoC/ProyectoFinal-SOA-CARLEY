@@ -99,7 +99,9 @@ class InvoicePdfService {
     const rows = [
       ['Cliente', payload.cliente],
       ['Orden', payload.orderId],
-      ['Fecha de emision', payload.fecha]
+      ['Fecha de emision', payload.fecha],
+      ['Camion asignado', payload.camion || 'Pendiente'],
+      ['Distrito destino', payload.distrito || 'Pendiente']
     ];
 
     let y = 178;
@@ -114,10 +116,12 @@ class InvoicePdfService {
         .text(String(value), 160, y, { width: 380 });
       y += 20;
     });
+
+    doc.y = y + 16;
   }
 
   renderItemsTable(doc, items) {
-    const startY = 260;
+    const startY = Math.max(doc.y, 300);
     const columns = [
       { label: 'SKU', x: 48, width: 76 },
       { label: 'PRODUCTO', x: 124, width: 190 },

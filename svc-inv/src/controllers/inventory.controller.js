@@ -18,7 +18,7 @@ class InventoryController {
   }
 
   async updateStock(req, res) {
-    const dto = await this.inventoryService.updateStockQuantity(req.body.sku, req.body.physicalStock);
+    const dto = await this.inventoryService.addStockQuantity(req.body.sku, req.body.quantity);
     return res.status(200).json(dto);
   }
 

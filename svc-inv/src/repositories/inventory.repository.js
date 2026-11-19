@@ -60,7 +60,7 @@ class InventoryRepository {
     });
   }
 
-  async updateSantaClaraPhysicalStock(sku, physicalStock) {
+  async addSantaClaraStock(sku, quantity) {
     return sequelize.transaction(async (transaction) => {
       const normalizedSku = sku.toUpperCase();
       const stock = await InventoryStock.findOne({
@@ -76,21 +76,7 @@ class InventoryRepository {
         throw new HttpError(404, 'Not Found', `SKU ${normalizedSku} does not exist in inventory`);
       }
 
-      if (physicalStock < stock.reservedStock) {
-        throw new HttpError(
-          409,
-          'Conflict',
-          `Physical stock cannot be lower than reserved stock for SKU ${normalizedSku}`,
-          {
-            sku: normalizedSku,
-            reservedStock: stock.reservedStock,
-            requestedPhysicalStock: physicalStock
-          }
-        );
-      }
-
-      stock.physicalStock = physicalStock;
-      stock.availableStock = physicalStock - stock.reservedStock;
+      stock.availableStock += quantity;
       stock.lastUpdatedAt = new Date();
       await stock.save({ transaction });
       return stock.get({ plain: true });
